@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>학교 홈페이지 사진 & 썸네일 자동 생성기</title>
+  <title>학교 홈페이지 원스톱 이미지 자동 생성기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
   <style>
     @font-face {
@@ -18,107 +18,88 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'SUIT-Regular', sans-serif; }
     body { background-color: #f1f5f9; color: #1e293b; padding: 20px; }
     
-    .container {
-      max-width: 1200px;
+    .app-header { text-align: center; margin-bottom: 20px; }
+    .app-header h1 { font-size: 1.6rem; color: #0f172a; }
+
+    .main-layout {
+      max-width: 1400px;
       margin: 0 auto;
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 360px 1fr 280px;
       gap: 20px;
     }
-    
-    /* 탭 메뉴 스타일 */
-    .tab-container {
-      width: 100%;
-      display: flex;
-      gap: 10px;
-      margin-bottom: -10px;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 14px;
-      background: #e2e8f0;
-      color: #64748b;
-      font-size: 1.05rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 12px 12px 0 0;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tab-btn.active {
-      background: #ffffff;
-      color: #2563eb;
-      border-top: 4px solid #2563eb;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+
+    @media (max-width: 1100px) {
+      .main-layout { grid-template-columns: 1fr; }
     }
 
-    .editor-panel {
-      flex: 1;
-      min-width: 340px;
+    /* 패널 공통 */
+    .panel {
       background: #ffffff;
-      padding: 24px;
-      border-radius: 0 0 16px 16px;
+      padding: 20px;
+      border-radius: 16px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      max-height: 85vh;
+      max-height: 88vh;
       overflow-y: auto;
     }
 
-    .preview-panel {
-      flex: 1.2;
-      min-width: 360px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      margin-top: 40px;
+    /* 탭 메뉴 */
+    .tab-container { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn {
+      flex: 1; padding: 10px; background: #e2e8f0; color: #64748b;
+      font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
     }
+    .tab-btn.active { background: #2563eb; color: #fff; }
 
-    h2 { font-size: 1.2rem; margin-bottom: 16px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
-    .section-title { font-size: 0.95rem; font-weight: bold; margin: 16px 0 8px; color: #3b82f6; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+    .section-title { font-size: 0.88rem; font-weight: bold; margin: 14px 0 6px; color: #3b82f6; }
+    .form-group { margin-bottom: 10px; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
     
     input[type="text"], select, textarea {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      outline: none;
+      width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; outline: none;
     }
 
-    .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-    .btn-preset {
-      width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
-      cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+    .color-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .btn-preset { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .flex-row { display: flex; gap: 8px; align-items: center; }
 
-    .flex-row { display: flex; gap: 10px; align-items: center; }
-
+    /* 미리보기 중앙 영역 */
+    .preview-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    
     canvas {
-      width: 100%;
-      max-width: 540px;
-      height: auto;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-      background: #fff;
+      width: 100%; max-width: 500px; height: auto; border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12); background: #fff;
     }
 
-    .btn-download {
-      width: 100%;
-      max-width: 540px;
-      padding: 14px;
-      background: #2563eb;
-      color: white;
-      font-size: 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-      transition: background 0.2s;
+    .btn-action {
+      width: 100%; max-width: 500px; padding: 12px; font-size: 0.95rem; font-weight: bold;
+      border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .btn-download:hover { background: #1d4ed8; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #10b981; color: white; margin-top: 6px; }
+    .btn-success:hover { background: #059669; }
+
+    /* 다중 사진 목록 스타일 */
+    .photo-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
+    .photo-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.8rem;
+    }
+    .photo-item input { width: 90px; padding: 3px 6px; font-size: 0.75rem; }
+
+    /* 히스토리 사이드바 */
+    .history-list { display: flex; flex-direction: column; gap: 12px; }
+    .history-card {
+      background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .history-card img { width: 100%; height: auto; border-radius: 4px; border: 1px solid #e2e8f0; }
+    .history-card .info { font-size: 0.75rem; color: #64748b; display: flex; justify-content: space-between; }
+    .history-card .btn-re-download {
+      padding: 4px 8px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
+    }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -126,16 +107,20 @@
 </head>
 <body>
 
-<div class="container">
-  <!-- 탭 메뉴 헤더 -->
-  <div class="tab-container">
-    <button class="tab-btn active" onclick="switchTab('cover')">📌 1. 표지(썸네일) 제작</button>
-    <button class="tab-btn" onclick="switchTab('photo')">📷 2. 본문 사진(학년 표시) 제작</button>
-  </div>
+<div class="app-header">
+  <h1>🏫 학교 홈페이지 게시물 일괄 제작기</h1>
+</div>
 
-  <div class="editor-panel">
-    <!-- 공통 배경 & 폰트 설정 -->
-    <h2>🎨 공통 테마 설정</h2>
+<div class="main-layout">
+  <!-- 1. 좌측 편집 패널 -->
+  <div class="panel">
+    <div class="tab-container">
+      <button class="tab-btn active" onclick="switchTab('cover')">📌 표지 제작</button>
+      <button class="tab-btn" onclick="switchTab('photo')">📷 본문 사진 (다중)</button>
+    </div>
+
+    <!-- 공통 테마 -->
+    <h2>🎨 공통 테마</h2>
     <div class="color-presets">
       <div class="btn-preset" style="background: linear-gradient(135deg, #38ef7d, #11998e, #ffe000);" onclick="setTheme('cyanYellow')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);" onclick="setTheme('pinkBlue')"></div>
@@ -146,30 +131,28 @@
     </div>
     
     <div class="form-group flex-row">
-      <label style="margin:0;">배경 타입:</label>
-      <select id="bgType" onchange="drawCanvas()" style="width: 120px;">
+      <label style="margin:0;">배경:</label>
+      <select id="bgType" onchange="drawCanvas()" style="width: 90px;">
         <option value="gradient">그라데이션</option>
         <option value="solid">단색</option>
       </select>
-      <input type="color" id="bgColor1" value="#11998e" onchange="drawCanvas()" style="width:40px; height:32px; border:none; cursor:pointer;">
-      <input type="color" id="bgColor2" value="#ffe000" onchange="drawCanvas()" style="width:40px; height:32px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor1" value="#11998e" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor2" value="#ffe000" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
     </div>
 
     <div class="form-group">
       <label>폰트 선택 / 파일 업로드</label>
-      <div class="flex-row">
-        <select id="fontSelect" onchange="drawCanvas()">
-          <option value="GmarketSansBold">지마켓 산스 (강조용)</option>
-          <option value="OTWelcomeRA">웰컴체 (귀여움)</option>
-          <option value="SUIT-Regular">SUIT (깔끔함)</option>
-        </select>
-        <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="font-size:0.75rem;">
-      </div>
+      <select id="fontSelect" onchange="drawCanvas()">
+        <option value="GmarketSansBold">지마켓 산스 (강조)</option>
+        <option value="OTWelcomeRA">웰컴체 (귀여움)</option>
+        <option value="SUIT-Regular">SUIT (깔끔)</option>
+      </select>
+      <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 전용 옵션 -->
+    <!-- 탭 1: 표지 -->
     <div id="coverTab" class="tab-content active">
-      <h2>📌 표지 옵션</h2>
+      <h2>📌 표지 문구</h2>
       <div class="form-group">
         <label>상단 소제목</label>
         <input type="text" id="subTitle" value="5월의 샛별" oninput="drawCanvas()">
@@ -179,44 +162,54 @@
         <input type="text" id="mainTitle" value="구기대회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>형광펜 하이라이트 색상</label>
-        <input type="color" id="highlightColor" value="#ffdc34" onchange="drawCanvas()" style="width:100%; height:32px; border:none; cursor:pointer;">
+        <label>형광펜 색상</label>
+        <input type="color" id="highlightColor" value="#ffdc34" onchange="drawCanvas()" style="width:100%; height:26px; border:none; cursor:pointer;">
       </div>
       <div class="form-group">
-        <label>본문 내용 (엔터 가능)</label>
+        <label>본문 내용</label>
         <textarea id="bodyText" rows="2" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
       </div>
       <div class="form-group">
-        <label>하단 해시태그</label>
+        <label>해시태그</label>
         <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>표지용 대표 사진 (선택)</label>
+        <label>표지용 대표 사진</label>
         <input type="file" id="coverImageInput" accept="image/*" onchange="loadCoverImage(event)">
       </div>
     </div>
 
-    <!-- 탭 2: 본문 사진 전용 옵션 -->
+    <!-- 탭 2: 다중 사진 -->
     <div id="photoTab" class="tab-content">
-      <h2>📷 본문 사진 옵션</h2>
+      <h2>📷 본문 사진 (여러 장 선택 가능)</h2>
       <div class="form-group">
-        <label>본문 행사 사진 선택</label>
-        <input type="file" id="photoImageInput" accept="image/*" onchange="loadPhotoImage(event)">
+        <label>사진 복수 선택 (Ctrl/Shift 누르고 클릭)</label>
+        <input type="file" id="multiFileInput" accept="image/*" multiple onchange="loadMultiplePhotos(event)">
       </div>
-      <div class="form-group flex-row" style="margin-top: 16px;">
-        <label style="margin:0;"><input type="checkbox" id="showBadge" checked onchange="drawCanvas()"> 학년 라벨 표시하기</label>
-      </div>
-      <div class="form-group">
-        <label>학년 라벨 문구</label>
-        <input type="text" id="badgeText" value="<1학년>" oninput="drawCanvas()" placeholder="예: <1학년> 또는 <저학년>">
+      
+      <div class="section-title">업로드된 사진 목록 & 학년 설정</div>
+      <div id="photoList" class="photo-list">
+        <div style="font-size:0.8rem; color:#94a3b8;">사진을 첨부하면 여기에 목록이 표시됩니다.</div>
       </div>
     </div>
   </div>
 
-  <!-- 오른쪽 실시간 미리보기 -->
-  <div class="preview-panel">
+  <!-- 2. 중앙 실시간 미리보기 및 통합 다운로드 -->
+  <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
-    <button class="btn-download" onclick="downloadImage()">💾 이미지 다운로드 (PNG)</button>
+
+    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 화면 개별 저장 (PNG)</button>
+    <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지+사진 전체 '긴 한 장 이미지'로 저장</button>
+  </div>
+
+  <!-- 3. 우측 최근 만든 작업 목록 (히스토리) -->
+  <div class="panel">
+    <h2>📜 최근 만든 작업물</h2>
+    <div id="historyList" class="history-list">
+      <div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">
+        다운로드한 이미지 내역이<br>여기에 자동으로 보관됩니다.
+      </div>
+    </div>
   </div>
 </div>
 
@@ -224,12 +217,16 @@
   const canvas = document.getElementById('thumbnailCanvas');
   const ctx = canvas.getContext('2d');
   
-  let currentMode = 'cover'; // 'cover' 또는 'photo'
+  let currentMode = 'cover';
   let coverImage = null;
-  let photoImage = null;
   let customFontName = null;
 
-  // 탭 전환
+  // 다중 사진 데이터 구조 [{ img: ImageObject, badge: '<1학년>', name: '파일명' }]
+  let photoList = [];
+  let selectedPhotoIndex = 0;
+
+  let historyItems = [];
+
   function switchTab(mode) {
     currentMode = mode;
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -248,7 +245,6 @@
     drawCanvas();
   }
 
-  // 기본 더미 이미지 생성
   function createDefaultImages() {
     const dCanvas = document.createElement('canvas');
     dCanvas.width = 600; dCanvas.height = 360;
@@ -263,9 +259,67 @@
     img.src = dCanvas.toDataURL();
     img.onload = () => {
       coverImage = img;
-      photoImage = img;
+      photoList = [{ img: img, badge: '<1학년>', name: '샘플사진.jpg' }];
+      updatePhotoListUI();
       drawCanvas();
     };
+  }
+
+  function loadMultiplePhotos(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    photoList = [];
+    let loadedCount = 0;
+
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          photoList.push({
+            img: img,
+            badge: `<${index + 1}학년>`,
+            name: file.name
+          });
+          loadedCount++;
+          if (loadedCount === files.length) {
+            selectedPhotoIndex = 0;
+            updatePhotoListUI();
+            drawCanvas();
+          }
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updatePhotoListUI() {
+    const container = document.getElementById('photoList');
+    container.innerHTML = '';
+
+    photoList.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.style.border = index === selectedPhotoIndex ? '2px solid #2563eb' : '1px solid #e2e8f0';
+      div.onclick = () => { selectedPhotoIndex = index; updatePhotoListUI(); drawCanvas(); };
+
+      div.innerHTML = `
+        <span style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${index+1}. ${item.name}</span>
+        <div>
+          <input type="text" value="${item.badge}" oninput="updateBadge(${index}, this.value)">
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function updateBadge(index, value) {
+    if (photoList[index]) {
+      photoList[index].badge = value;
+      drawCanvas();
+    }
   }
 
   function loadCustomFont(event) {
@@ -316,256 +370,244 @@
     reader.readAsDataURL(file);
   }
 
-  function loadPhotoImage(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => { photoImage = img; drawCanvas(); };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+  function drawCanvas() {
+    renderCardToContext(ctx, currentMode, currentMode === 'cover' ? coverImage : (photoList[selectedPhotoIndex] ? photoList[selectedPhotoIndex].img : null), photoList[selectedPhotoIndex] ? photoList[selectedPhotoIndex].badge : '');
   }
 
-  // 전체 그린 그리기 함수
-  function drawCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 렌더링 범용 함수
+  function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
+    targetCtx.clearRect(0, 0, width, height);
     const fontChoice = document.getElementById('fontSelect').value;
     const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
 
-    // 1. 배경
     const bgType = document.getElementById('bgType').value;
     const color1 = document.getElementById('bgColor1').value;
     const color2 = document.getElementById('bgColor2').value;
 
     if (bgType === 'gradient') {
-      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      const grad = targetCtx.createLinearGradient(0, 0, width, height);
       grad.addColorStop(0, color1);
       grad.addColorStop(1, color2);
-      ctx.fillStyle = grad;
+      targetCtx.fillStyle = grad;
     } else {
-      ctx.fillStyle = color1;
+      targetCtx.fillStyle = color1;
     }
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    targetCtx.fillRect(0, 0, width, height);
 
-    drawConfetti();
+    drawConfettiToCtx(targetCtx, width, height);
 
-    // 2. 노트 바탕
     const margin = 50;
-    const noteWidth = canvas.width - (margin * 2);
-    const noteHeight = canvas.height - (margin * 2);
+    const noteWidth = width - (margin * 2);
+    const noteHeight = height - (margin * 2);
     
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 20;
-    ctx.shadowOffsetY = 10;
-    ctx.fillRect(margin, margin, noteWidth, noteHeight);
-    ctx.restore();
+    targetCtx.save();
+    targetCtx.fillStyle = '#ffffff';
+    targetCtx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    targetCtx.shadowBlur = 20;
+    targetCtx.shadowOffsetY = 10;
+    targetCtx.fillRect(margin, margin, noteWidth, noteHeight);
+    targetCtx.restore();
 
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(margin, margin, noteWidth, noteHeight);
+    targetCtx.strokeStyle = '#000000';
+    targetCtx.lineWidth = 4;
+    targetCtx.strokeRect(margin, margin, noteWidth, noteHeight);
 
-    // 격자
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
+    targetCtx.strokeStyle = '#e5e7eb';
+    targetCtx.lineWidth = 1;
     const gridSize = 20;
     for (let x = margin + gridSize; x < margin + noteWidth; x += gridSize) {
-      ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, margin + noteHeight); ctx.stroke();
+      targetCtx.beginPath(); targetCtx.moveTo(x, margin); targetCtx.lineTo(x, margin + noteHeight); targetCtx.stroke();
     }
     for (let y = margin + gridSize; y < margin + noteHeight; y += gridSize) {
-      ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(margin + noteWidth, y); ctx.stroke();
+      targetCtx.beginPath(); targetCtx.moveTo(margin, y); targetCtx.lineTo(margin + noteWidth, y); targetCtx.stroke();
     }
 
-    // 스프링 구멍
     const springCount = 6;
     const springSpacing = noteWidth / (springCount + 1);
     for (let i = 1; i <= springCount; i++) {
       const sx = margin + (springSpacing * i);
       const sy = margin + 25;
-      ctx.fillStyle = '#000000';
-      ctx.beginPath(); ctx.arc(sx, sy, 14, 0, Math.PI * 2); ctx.fill();
-      ctx.fillRect(sx - 6, margin - 15, 12, 30);
+      targetCtx.fillStyle = '#000000';
+      targetCtx.beginPath(); targetCtx.arc(sx, sy, 14, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.fillRect(sx - 6, margin - 15, 12, 30);
     }
 
-    // 모드별 렌더링
-    if (currentMode === 'cover') {
-      drawCoverMode(margin, noteWidth, noteHeight, selectedFont);
+    if (mode === 'cover') {
+      const boxX = margin + 40; const boxY = margin + 70; const boxW = noteWidth - 80; const boxH = 150;
+      targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
+      roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
+
+      const subText = document.getElementById('subTitle').value;
+      targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
+      targetCtx.fillText(subText, width / 2, boxY + 45);
+
+      const mainText = document.getElementById('mainTitle').value;
+      const hlColor = document.getElementById('highlightColor').value;
+      targetCtx.font = `bold 54px "${selectedFont}", sans-serif`;
+      const textWidth = targetCtx.measureText(mainText).width;
+
+      targetCtx.fillStyle = hlColor;
+      targetCtx.fillRect((width / 2) - (textWidth / 2) - 10, boxY + 112, textWidth + 20, 18);
+
+      targetCtx.fillStyle = '#000000';
+      targetCtx.fillText(mainText, width / 2, boxY + 120);
+
+      const imgX = margin + 40; const imgY = boxY + boxH + 30; const imgW = noteWidth - 80; const imgH = 310;
+      if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
+
+      const bodyText = document.getElementById('bodyText').value;
+      const lines = bodyText.split('\n');
+      targetCtx.fillStyle = '#1e293b'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
+      let startY = imgY + imgH + 50;
+      lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 34; });
+
+      const hashTags = document.getElementById('hashTags').value;
+      targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
+      targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
     } else {
-      drawPhotoMode(margin, noteWidth, noteHeight, selectedFont);
-    }
-  }
+      const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
+      if (imgObj) {
+        drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
+        if (badgeText) {
+          targetCtx.font = `bold 32px "${selectedFont}", sans-serif`;
+          const bWidth = targetCtx.measureText(badgeText).width + 36;
+          const bHeight = 54;
+          const bX = imgX + imgW - bWidth - 20;
+          const bY = imgY + 20;
 
-  // 1. 표지 모드 렌더링
-  function drawCoverMode(margin, noteWidth, noteHeight, selectedFont) {
-    const boxX = margin + 40;
-    const boxY = margin + 70;
-    const boxW = noteWidth - 80;
-    const boxH = 150;
+          targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
+          roundRect(targetCtx, bX, bY, bWidth, bHeight, 12, true, true);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
-    roundRect(ctx, boxX, boxY, boxW, boxH, 20, true, true);
-
-    const subText = document.getElementById('subTitle').value;
-    ctx.fillStyle = '#000000';
-    ctx.font = `bold 28px "${selectedFont}", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(subText, canvas.width / 2, boxY + 45);
-
-    const mainText = document.getElementById('mainTitle').value;
-    const hlColor = document.getElementById('highlightColor').value;
-    
-    ctx.font = `bold 54px "${selectedFont}", sans-serif`;
-    const textWidth = ctx.measureText(mainText).width;
-
-    ctx.fillStyle = hlColor;
-    ctx.fillRect((canvas.width / 2) - (textWidth / 2) - 10, boxY + 112, textWidth + 20, 18);
-
-    ctx.fillStyle = '#000000';
-    ctx.fillText(mainText, canvas.width / 2, boxY + 120);
-
-    const imgX = margin + 40;
-    const imgY = boxY + boxH + 30;
-    const imgW = noteWidth - 80;
-    const imgH = 310;
-
-    if (coverImage) {
-      drawClippedImage(coverImage, imgX, imgY, imgW, imgH);
-    }
-
-    const bodyText = document.getElementById('bodyText').value;
-    const lines = bodyText.split('\n');
-    ctx.fillStyle = '#1e293b';
-    ctx.font = `24px "${selectedFont}", sans-serif`;
-    ctx.textAlign = 'center';
-
-    let startY = imgY + imgH + 50;
-    lines.forEach((line) => {
-      ctx.fillText(line, canvas.width / 2, startY);
-      startY += 34;
-    });
-
-    const hashTags = document.getElementById('hashTags').value;
-    ctx.fillStyle = '#64748b';
-    ctx.font = `20px "${selectedFont}", sans-serif`;
-    ctx.fillText(hashTags, canvas.width / 2, margin + noteHeight - 35);
-  }
-
-  // 2. 본문 사진 모드 렌더링
-  function drawPhotoMode(margin, noteWidth, noteHeight, selectedFont) {
-    const imgX = margin + 30;
-    const imgY = margin + 70;
-    const imgW = noteWidth - 60;
-    const imgH = noteHeight - 100;
-
-    if (photoImage) {
-      drawClippedImage(photoImage, imgX, imgY, imgW, imgH);
-
-      const showBadge = document.getElementById('showBadge').checked;
-      const badgeText = document.getElementById('badgeText').value;
-
-      if (showBadge && badgeText) {
-        ctx.font = `bold 32px "${selectedFont}", sans-serif`;
-        const bWidth = ctx.measureText(badgeText).width + 36;
-        const bHeight = 54;
-        const bX = imgX + imgW - bWidth - 20;
-        const bY = imgY + 20;
-
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 4;
-        roundRect(ctx, bX, bY, bWidth, bHeight, 12, true, true);
-
-        ctx.fillStyle = '#000000';
-        ctx.textAlign = 'center';
-        ctx.fillText(badgeText, bX + (bWidth / 2), bY + 38);
+          targetCtx.fillStyle = '#000000'; targetCtx.textAlign = 'center';
+          targetCtx.fillText(badgeText, bX + (bWidth / 2), bY + 38);
+        }
       }
     }
   }
 
-  // 이미지 비율 맞춤 그리기 도우미
-  function drawClippedImage(img, x, y, w, h) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, w, h);
-    ctx.clip();
-
-    const imgRatio = img.width / img.height;
-    const targetRatio = w / h;
+  function drawClippedImageToCtx(targetCtx, img, x, y, w, h) {
+    targetCtx.save(); targetCtx.beginPath(); targetCtx.rect(x, y, w, h); targetCtx.clip();
+    const imgRatio = img.width / img.height; const targetRatio = w / h;
     let renderW, renderH, renderX, renderY;
-
     if (imgRatio > targetRatio) {
-      renderH = h; renderW = h * imgRatio;
-      renderX = x - (renderW - w) / 2; renderY = y;
+      renderH = h; renderW = h * imgRatio; renderX = x - (renderW - w) / 2; renderY = y;
     } else {
-      renderW = w; renderH = w / imgRatio;
-      renderX = x; renderY = y - (renderH - h) / 2;
+      renderW = w; renderH = w / imgRatio; renderX = x; renderY = y - (renderH - h) / 2;
     }
-
-    ctx.drawImage(img, renderX, renderY, renderW, renderH);
-    ctx.restore();
-
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(x, y, w, h);
+    targetCtx.drawImage(img, renderX, renderY, renderW, renderH);
+    targetCtx.restore();
+    targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4; targetCtx.strokeRect(x, y, w, h);
   }
 
   function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
+    ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
     ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
     ctx.lineTo(x + width, y + height - radius);
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
+    ctx.lineTo(x + radius, y + height); quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius); ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+    if (fill) ctx.fill(); if (stroke) ctx.stroke();
   }
 
-  function drawConfetti() {
+  function drawConfettiToCtx(targetCtx, width, height) {
     const shapes = [
-      { type: 'circle', x: 25, y: 170, color: '#ff4757', r: 12 },
-      { type: 'rect', x: 18, y: 300, color: '#2ed573', r: 16 },
-      { type: 'circle', x: 30, y: 600, color: '#eccc68', r: 14 },
-      { type: 'triangle', x: 775, y: 500, color: '#2ed573', r: 15 },
-      { type: 'circle', x: 770, y: 200, color: '#3742fa', r: 13 },
-      { type: 'rect', x: 765, y: 400, color: '#ffa502', r: 14 },
-      { type: 'triangle', x: 340, y: 25, color: '#e84393', r: 16 },
-      { type: 'rect', x: 570, y: 940, color: '#eccc68', r: 14 }
+      { type: 'circle', x: 25, y: 170, color: '#ff4757', r: 12 }, { type: 'rect', x: 18, y: 300, color: '#2ed573', r: 16 },
+      { type: 'circle', x: 30, y: 600, color: '#eccc68', r: 14 }, { type: 'triangle', x: width - 25, y: 500, color: '#2ed573', r: 15 },
+      { type: 'circle', x: width - 30, y: 200, color: '#3742fa', r: 13 }, { type: 'rect', x: width - 35, y: 400, color: '#ffa502', r: 14 }
     ];
-
     shapes.forEach(s => {
-      ctx.fillStyle = s.color; ctx.strokeStyle = '#000000'; ctx.lineWidth = 3;
-      ctx.beginPath();
-      if (s.type === 'circle') { ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-      else if (s.type === 'rect') { ctx.rect(s.x - s.r, s.y - s.r, s.r * 2, s.r * 2); ctx.fill(); ctx.stroke(); }
+      targetCtx.fillStyle = s.color; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 3; targetCtx.beginPath();
+      if (s.type === 'circle') { targetCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke(); }
+      else if (s.type === 'rect') { targetCtx.rect(s.x - s.r, s.y - s.r, s.r * 2, s.r * 2); targetCtx.fill(); targetCtx.stroke(); }
       else if (s.type === 'triangle') {
-        ctx.moveTo(s.x, s.y - s.r); ctx.lineTo(s.x + s.r, s.y + s.r); ctx.lineTo(s.x - s.r, s.y + s.r);
-        ctx.closePath(); ctx.fill(); ctx.stroke();
+        targetCtx.moveTo(s.x, s.y - s.r); targetCtx.lineTo(s.x + s.r, s.y + s.r); targetCtx.lineTo(s.x - s.r, s.y + s.r);
+        targetCtx.closePath(); targetCtx.fill(); targetCtx.stroke();
       }
     });
   }
 
-  function downloadImage() {
-    let filename = '학교_이미지';
-    if (currentMode === 'cover') {
-      const title = document.getElementById('mainTitle').value || '표지';
-      filename = `[표지]_${title}`;
-    } else {
-      const badge = document.getElementById('badgeText').value || '사진';
-      filename = `[본문사진]_${badge.replace(/[<>]/g, '')}`;
-    }
+  // 단일 개별 저장
+  function downloadCurrent() {
+    const dataUrl = canvas.toDataURL('image/png');
+    const title = document.getElementById('mainTitle').value || '개별이미지';
+    saveToHistory(dataUrl, `[개별] ${title}`);
+    
     const link = document.createElement('a');
-    link.download = `${filename}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `${title}_개별.png`; link.href = dataUrl; link.click();
+  }
+
+  // 🚀 핵심: 표지 + 모든 본문 사진 '세로 통합 길다란 이미지'로 저장!
+  function downloadCombinedLongImage() {
+    const cardCount = 1 + photoList.length; // 표지 1장 + 사진 개수
+    const cardWidth = 800;
+    const cardHeight = 800;
+
+    const longCanvas = document.createElement('canvas');
+    longCanvas.width = cardWidth;
+    longCanvas.height = cardHeight * cardCount;
+    const longCtx = longCanvas.getContext('2d');
+
+    // 1. 첫 번째 칸: 표지 렌더링
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    renderCardToContext(tempCtx, 'cover', coverImage, '');
+    longCtx.drawImage(tempCanvas, 0, 0);
+
+    // 2. 두 번째 칸부터: 본문 사진 순서대로 렌더링
+    photoList.forEach((photoItem, i) => {
+      tempCtx.clearRect(0, 0, cardWidth, cardHeight);
+      renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge);
+      longCtx.drawImage(tempCanvas, 0, (i + 1) * cardHeight);
+    });
+
+    const dataUrl = longCanvas.toDataURL('image/png');
+    const title = document.getElementById('mainTitle').value || '통합게시물';
+    
+    saveToHistory(dataUrl, `[통합] ${title} (총 ${cardCount}장)`);
+
+    const link = document.createElement('a');
+    link.download = `${title}_전체통합.png`;
+    link.href = dataUrl;
+    link.click();
+  }
+
+  // 히스토리에 기록 저장
+  function saveToHistory(dataUrl, title) {
+    historyItems.unshift({
+      title: title,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      url: dataUrl
+    });
+
+    if (historyItems.length > 8) historyItems.pop(); // 최근 8개 보관
+    updateHistoryUI();
+  }
+
+  function updateHistoryUI() {
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+
+    historyItems.forEach((item) => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      card.innerHTML = `
+        <img src="${item.url}" alt="작업이력">
+        <div class="info">
+          <span><b>${item.title}</b></span>
+          <span>${item.time}</span>
+        </div>
+        <button class="btn-re-download" onclick="reDownload('${item.url}', '${item.title}')">다시 다운로드</button>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function reDownload(url, title) {
+    const link = document.createElement('a');
+    link.download = `${title}.png`;
+    link.href = url;
     link.click();
   }
 
