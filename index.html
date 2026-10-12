@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>학교 홈페이지 게시물 통합 자동 생성기</title>
+  <title>학교 홈페이지 게시물 자동 생성기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
   <style>
     @font-face {
@@ -52,7 +52,6 @@
     .tab-btn.active { background: #2563eb; color: #fff; }
 
     h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .section-title { font-size: 0.88rem; font-weight: bold; margin: 14px 0 6px; color: #3b82f6; }
     .form-group { margin-bottom: 10px; }
     label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
     
@@ -81,7 +80,7 @@
     .btn-success { background: #10b981; color: white; margin-top: 6px; }
     .btn-success:hover { background: #059669; }
 
-    /* 사진 업로드 & 학년 관리 리스트 */
+    /* 사진 카드 업로드 리스트 */
     .btn-add-photo {
       width: 100%; padding: 10px; background: #3b82f6; color: white; border: none;
       border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 12px;
@@ -98,7 +97,6 @@
     .photo-card-header img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; }
     .photo-card-title { font-size: 0.8rem; font-weight: bold; color: #334155; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* Quick Badge Buttons */
     .badge-btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
     .btn-badge {
       padding: 3px 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px;
@@ -108,7 +106,7 @@
     .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
     .btn-del:hover { background: #dc2626; color: white; }
 
-    /* 히스토리 사이드바 */
+    /* 히스토리 리스트 */
     .history-list { display: flex; flex-direction: column; gap: 12px; }
     .history-card {
       background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
@@ -141,8 +139,8 @@
   <!-- 1. 좌측 편집 패널 -->
   <div class="panel">
     <div class="tab-container">
-      <button class="tab-btn active" onclick="switchTab('cover')">📌 표지 제작</button>
-      <button class="tab-btn" onclick="switchTab('photo')">📷 본문 사진 목록</button>
+      <button class="tab-btn active" id="btnCoverTab" onclick="switchTab('cover')">📌 표지 제작</button>
+      <button class="tab-btn" id="btnPhotoTab" onclick="switchTab('photo')">📷 본문 사진 목록</button>
     </div>
 
     <!-- 공통 테마 -->
@@ -253,19 +251,12 @@
 
   function switchTab(mode) {
     currentMode = mode;
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    
+    document.getElementById('btnCoverTab').classList.toggle('active', mode === 'cover');
+    document.getElementById('btnPhotoTab').classList.toggle('active', mode === 'photo');
+    document.getElementById('coverTab').classList.toggle('active', mode === 'cover');
+    document.getElementById('photoTab').classList.toggle('active', mode === 'photo');
 
-    tabBtns.forEach(btn => btn.classList.remove('active'));
-    tabContents.forEach(content => content.classList.remove('active'));
-
-    if (mode === 'cover') {
-      tabBtns[0].classList.add('active');
-      document.getElementById('coverTab').classList.add('active');
-    } else {
-      tabBtns[1].classList.add('active');
-      document.getElementById('photoTab').classList.add('active');
-    }
     drawCanvas();
   }
 
@@ -295,6 +286,7 @@
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
+    let loadedCount = 0;
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -308,8 +300,11 @@
             name: file.name
           });
           selectedPhotoId = newId;
-          renderPhotoCardsUI();
-          drawCanvas();
+          loadedCount++;
+          if (loadedCount === files.length) {
+            renderPhotoCardsUI();
+            drawCanvas();
+          }
         };
         img.src = event.target.result;
       };
@@ -330,6 +325,7 @@
     photoList.forEach((item, idx) => {
       const card = document.createElement('div');
       card.className = `photo-card ${item.id === selectedPhotoId ? 'selected' : ''}`;
+      
       card.onclick = (e) => {
         if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
           selectedPhotoId = item.id;
@@ -450,7 +446,7 @@
     );
   }
 
-  // 범용 렌더링 함수
+  // 핵심 렌더링 함수
   function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
     targetCtx.clearRect(0, 0, width, height);
     const fontChoice = document.getElementById('fontSelect').value;
@@ -473,7 +469,7 @@
 
     drawConfettiToCtx(targetCtx, width, height);
 
-    // 2. 스프링 노트 프레임
+    // 2. 노트 바탕
     const margin = 50;
     const noteWidth = width - (margin * 2);
     const noteHeight = height - (margin * 2);
@@ -512,18 +508,18 @@
       targetCtx.fillRect(sx - 6, margin - 15, 12, 30);
     }
 
-    // 3. 모드별 렌더링
+    // 3. 표지 모드 / 본문사진 모드 그리기
     if (mode === 'cover') {
       const boxX = margin + 40; const boxY = margin + 70; const boxW = noteWidth - 80; const boxH = 150;
       targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
-      // 상단 소제목
+      // 소제목
       const subText = document.getElementById('subTitle').value;
       targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 45);
 
-      // 메인 제목 & 형광펜
+      // 메인제목 & 형광펜
       const mainText = document.getElementById('mainTitle').value;
       const hlColor = document.getElementById('highlightColor').value;
       targetCtx.font = `bold 54px "${selectedFont}", sans-serif`;
@@ -539,7 +535,7 @@
       const imgX = margin + 40; const imgY = boxY + boxH + 30; const imgW = noteWidth - 80; const imgH = 310;
       if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
 
-      // 본문 설명 문구
+      // 본문 문구
       const bodyText = document.getElementById('bodyText').value;
       const lines = bodyText.split('\n');
       targetCtx.fillStyle = '#1e293b'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
@@ -551,12 +547,12 @@
       targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
       targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
     } else {
-      // 본문 사진 전용 모드
+      // 본문 사진 모드
       const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
       if (imgObj) {
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
         
-        // 학년 라벨
+        // 학년 라벨 표시
         if (badgeText) {
           targetCtx.font = `bold 32px "${selectedFont}", sans-serif`;
           const bWidth = targetCtx.measureText(badgeText).width + 36;
@@ -618,7 +614,6 @@
     });
   }
 
-  // 현재 화면 개별 저장
   function downloadCurrent() {
     const dataUrl = canvas.toDataURL('image/png');
     const title = document.getElementById('mainTitle').value || '개별이미지';
@@ -628,7 +623,7 @@
     link.download = `${title}_개별.png`; link.href = dataUrl; link.click();
   }
 
-  // 표지 + 모든 본문 사진 세로 통합 1장 저장
+  // 🚀 표지 + 본문사진 통째로 '긴 1장 이미지' 생성 다운로드
   function downloadCombinedLongImage() {
     const cardCount = 1 + photoList.length;
     const cardWidth = 800;
@@ -643,11 +638,11 @@
     tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
     const tempCtx = tempCanvas.getContext('2d');
     
-    // 1. 표지
+    // 1. 표지 렌더링
     renderCardToContext(tempCtx, 'cover', coverImage, '');
     longCtx.drawImage(tempCanvas, 0, 0);
 
-    // 2. 본문 사진 순서대로
+    // 2. 본문 사진들 렌더링
     photoList.forEach((photoItem, i) => {
       tempCtx.clearRect(0, 0, cardWidth, cardHeight);
       renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge);
