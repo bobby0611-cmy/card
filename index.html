@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>학교 홈페이지 게시물 자동 생성기</title>
+  <title>학교 홈페이지 게시물 통합 자동 생성기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
   <style>
     @font-face {
@@ -179,11 +179,11 @@
       <h2>📌 표지 문구 및 사진</h2>
       <div class="form-group">
         <label>상단 소제목 (예: 5월의 샛별)</label>
-        <input type="text" id="subTitle" value="5월의 샛별" oninput="drawCanvas()">
+        <input type="text" id="subTitle" value="5월의 샛별" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>메인 제목 (예: 구기대회)</label>
-        <input type="text" id="mainTitle" value="구기대회" oninput="drawCanvas()">
+        <input type="text" id="mainTitle" value="구기대회" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>형광펜 하이라이트 색상</label>
@@ -191,11 +191,11 @@
       </div>
       <div class="form-group">
         <label>본문 설명 문구 (엔터 가능)</label>
-        <textarea id="bodyText" rows="2" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
+        <textarea id="bodyText" rows="2" onkeyup="drawCanvas()" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
       </div>
       <div class="form-group">
         <label>하단 해시태그</label>
-        <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" oninput="drawCanvas()">
+        <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>표지용 사진 선택 (선택 사항)</label>
@@ -246,7 +246,6 @@
 
   let photoList = [];
   let selectedPhotoId = null;
-
   let historyItems = [];
 
   function switchTab(mode) {
@@ -315,6 +314,7 @@
 
   function renderPhotoCardsUI() {
     const container = document.getElementById('photoCardList');
+    if(!container) return;
     container.innerHTML = '';
 
     if (photoList.length === 0) {
@@ -354,7 +354,7 @@
           </div>
         </div>
         <div style="margin-top:2px;">
-          <input type="text" value="${item.badge}" placeholder="라벨 직접 수정 (예: <저학년>)" oninput="updateBadgeDirectly(${item.id}, this.value)">
+          <input type="text" value="${item.badge || ''}" placeholder="라벨 직접 수정 (예: <저학년>)" onkeyup="updateBadgeDirectly(${item.id}, this.value)" oninput="updateBadgeDirectly(${item.id}, this.value)">
         </div>
       `;
       container.appendChild(card);
@@ -442,20 +442,22 @@
       ctx, 
       currentMode, 
       currentMode === 'cover' ? coverImage : (currentPhoto ? currentPhoto.img : null), 
-      currentPhoto ? currentPhoto.badge : ''
+      currentPhoto ? (currentPhoto.badge || '') : ''
     );
   }
 
-  // 핵심 렌더링 함수
+  // 100% 안 안전 렌더링 함수
   function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
     targetCtx.clearRect(0, 0, width, height);
-    const fontChoice = document.getElementById('fontSelect').value;
+    
+    const fontSelectEl = document.getElementById('fontSelect');
+    const fontChoice = fontSelectEl ? fontSelectEl.value : 'GmarketSansBold';
     const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
 
     // 1. 배경
-    const bgType = document.getElementById('bgType').value;
-    const color1 = document.getElementById('bgColor1').value;
-    const color2 = document.getElementById('bgColor2').value;
+    const bgType = document.getElementById('bgType') ? document.getElementById('bgType').value : 'gradient';
+    const color1 = document.getElementById('bgColor1') ? document.getElementById('bgColor1').value : '#11998e';
+    const color2 = document.getElementById('bgColor2') ? document.getElementById('bgColor2').value : '#ffe000';
 
     if (bgType === 'gradient') {
       const grad = targetCtx.createLinearGradient(0, 0, width, height);
@@ -515,13 +517,17 @@
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
       // 소제목
-      const subText = document.getElementById('subTitle').value;
+      const subEl = document.getElementById('subTitle');
+      const subText = subEl ? subEl.value : '5월의 샛별';
       targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 45);
 
       // 메인제목 & 형광펜
-      const mainText = document.getElementById('mainTitle').value;
-      const hlColor = document.getElementById('highlightColor').value;
+      const mainEl = document.getElementById('mainTitle');
+      const mainText = mainEl ? mainEl.value : '구기대회';
+      const hlEl = document.getElementById('highlightColor');
+      const hlColor = hlEl ? hlEl.value : '#ffdc34';
+
       targetCtx.font = `bold 54px "${selectedFont}", sans-serif`;
       const textWidth = targetCtx.measureText(mainText).width;
 
@@ -536,14 +542,16 @@
       if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
 
       // 본문 문구
-      const bodyText = document.getElementById('bodyText').value;
+      const bodyEl = document.getElementById('bodyText');
+      const bodyText = bodyEl ? bodyEl.value : '';
       const lines = bodyText.split('\n');
       targetCtx.fillStyle = '#1e293b'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       let startY = imgY + imgH + 50;
       lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 34; });
 
       // 해시태그
-      const hashTags = document.getElementById('hashTags').value;
+      const hashEl = document.getElementById('hashTags');
+      const hashTags = hashEl ? hashEl.value : '';
       targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
       targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
     } else {
@@ -553,7 +561,7 @@
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
         
         // 학년 라벨 표시
-        if (badgeText) {
+        if (badgeText && badgeText.trim() !== '') {
           targetCtx.font = `bold 32px "${selectedFont}", sans-serif`;
           const bWidth = targetCtx.measureText(badgeText).width + 36;
           const bHeight = 54;
@@ -616,7 +624,8 @@
 
   function downloadCurrent() {
     const dataUrl = canvas.toDataURL('image/png');
-    const title = document.getElementById('mainTitle').value || '개별이미지';
+    const mainEl = document.getElementById('mainTitle');
+    const title = mainEl ? mainEl.value : '개별이미지';
     saveToHistory(dataUrl, `[개별] ${title}`);
     
     const link = document.createElement('a');
@@ -645,12 +654,13 @@
     // 2. 본문 사진들 렌더링
     photoList.forEach((photoItem, i) => {
       tempCtx.clearRect(0, 0, cardWidth, cardHeight);
-      renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge);
+      renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge || '');
       longCtx.drawImage(tempCanvas, 0, (i + 1) * cardHeight);
     });
 
     const dataUrl = longCanvas.toDataURL('image/png');
-    const title = document.getElementById('mainTitle').value || '통합게시물';
+    const mainEl = document.getElementById('mainTitle');
+    const title = mainEl ? mainEl.value : '통합게시물';
     
     saveToHistory(dataUrl, `[통합] ${title} (총 ${cardCount}장)`);
 
@@ -673,6 +683,7 @@
 
   function updateHistoryUI() {
     const list = document.getElementById('historyList');
+    if(!list) return;
     list.innerHTML = '';
 
     if (historyItems.length === 0) {
