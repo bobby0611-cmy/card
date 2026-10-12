@@ -51,7 +51,7 @@
     }
     .tab-btn.active { background: #2563eb; color: #fff; }
 
-    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
     .section-title { font-size: 0.88rem; font-weight: bold; margin: 14px 0 6px; color: #3b82f6; }
     .form-group { margin-bottom: 10px; }
     label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
@@ -81,7 +81,7 @@
     .btn-success { background: #10b981; color: white; margin-top: 6px; }
     .btn-success:hover { background: #059669; }
 
-    /* 직관적인 사진 업로드 & 학년 관리 리스트 */
+    /* 사진 업로드 & 학년 관리 리스트 */
     .btn-add-photo {
       width: 100%; padding: 10px; background: #3b82f6; color: white; border: none;
       border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 12px;
@@ -91,7 +91,7 @@
     .photo-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
     .photo-card {
       background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 10px;
-      display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s;
+      display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s; cursor: pointer;
     }
     .photo-card.selected { border-color: #2563eb; background: #eff6ff; }
     .photo-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -116,8 +116,15 @@
     }
     .history-card img { width: 100%; height: auto; border-radius: 4px; border: 1px solid #e2e8f0; }
     .history-card .info { font-size: 0.75rem; color: #64748b; display: flex; justify-content: space-between; }
-    .history-card .btn-re-download {
-      padding: 4px 8px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
+    .history-actions { display: flex; gap: 6px; }
+    .btn-re-download {
+      flex: 1; padding: 5px 8px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;
+    }
+    .btn-hist-del {
+      padding: 5px 8px; background: #ef4444; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;
+    }
+    .btn-clear-all {
+      font-size: 0.75rem; padding: 3px 8px; background: #f1f5f9; color: #ef4444; border: 1px solid #fca5a5; border-radius: 4px; cursor: pointer;
     }
 
     .tab-content { display: none; }
@@ -127,7 +134,7 @@
 <body>
 
 <div class="app-header">
-  <h1>🏫 학교 홈페이지 게시물 일괄 제작기</h1>
+  <h1>🏫 학교 홈페이지 게시물 통합 자동 생성기</h1>
 </div>
 
 <div class="main-layout">
@@ -198,31 +205,31 @@
       </div>
     </div>
 
-    <!-- 탭 2: 직관적인 본문 사진 관리 -->
+    <!-- 탭 2: 본문 사진 관리 -->
     <div id="photoTab" class="tab-content">
       <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
-      <!-- 사진 추가 버튼 -->
       <button class="btn-add-photo" onclick="document.getElementById('photoFileInput').click()">➕ 사진 추가하기 (클릭)</button>
       <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;" onchange="handleAddPhotos(event)">
 
-      <div id="photoCardList" class="photo-card-list">
-        <!-- 동적으로 추가되는 사진 카드들 -->
-      </div>
+      <div id="photoCardList" class="photo-card-list"></div>
     </div>
   </div>
 
-  <!-- 2. 중앙 실시간 미리보기 및 통합 다운로드 -->
+  <!-- 2. 중앙 실시간 미리보기 및 다운로드 -->
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
-    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 렌더링 화면 저장 (PNG)</button>
+    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 화면 개별 저장 (PNG)</button>
     <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지 + 본문사진 '긴 1장 이미지'로 통째 저장</button>
   </div>
 
   <!-- 3. 우측 최근 만든 작업 목록 (히스토리) -->
   <div class="panel">
-    <h2>📜 최근 만든 작업물</h2>
+    <h2>
+      📜 최근 작업 목록
+      <button class="btn-clear-all" onclick="clearAllHistory()">비우기</button>
+    </h2>
     <div id="historyList" class="history-list">
       <div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">
         다운로드한 이미지 내역이<br>여기에 보관됩니다.
@@ -239,7 +246,6 @@
   let coverImage = null;
   let customFontName = null;
 
-  // 본문 사진 데이터 [{ id, img, badge, name }]
   let photoList = [];
   let selectedPhotoId = null;
 
@@ -263,7 +269,6 @@
     drawCanvas();
   }
 
-  // 기본 더미 이미지 및 초기 설정
   function createDefaultSetup() {
     const dCanvas = document.createElement('canvas');
     dCanvas.width = 600; dCanvas.height = 360;
@@ -286,7 +291,6 @@
     };
   }
 
-  // 사진 추가 처리
   function handleAddPhotos(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -300,7 +304,7 @@
           photoList.push({
             id: newId,
             img: img,
-            badge: '', // 기본은 학년 없음
+            badge: '',
             name: file.name
           });
           selectedPhotoId = newId;
@@ -311,10 +315,9 @@
       };
       reader.readAsDataURL(file);
     });
-    e.target.value = ''; // 초기화
+    e.target.value = '';
   }
 
-  // 사진 카드 목록 UI 생성
   function renderPhotoCardsUI() {
     const container = document.getElementById('photoCardList');
     container.innerHTML = '';
@@ -664,17 +667,24 @@
 
   function saveToHistory(dataUrl, title) {
     historyItems.unshift({
+      id: Date.now() + Math.random(),
       title: title,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       url: dataUrl
     });
-    if (historyItems.length > 8) historyItems.pop();
+    if (historyItems.length > 10) historyItems.pop();
     updateHistoryUI();
   }
 
   function updateHistoryUI() {
     const list = document.getElementById('historyList');
     list.innerHTML = '';
+
+    if (historyItems.length === 0) {
+      list.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">다운로드한 이미지 내역이<br>여기에 보관됩니다.</div>';
+      return;
+    }
+
     historyItems.forEach((item) => {
       const card = document.createElement('div');
       card.className = 'history-card';
@@ -684,10 +694,25 @@
           <span><b>${item.title}</b></span>
           <span>${item.time}</span>
         </div>
-        <button class="btn-re-download" onclick="reDownload('${item.url}', '${item.title}')">다시 다운로드</button>
+        <div class="history-actions">
+          <button class="btn-re-download" onclick="reDownload('${item.url}', '${item.title}')">다시 다운로드</button>
+          <button class="btn-hist-del" onclick="deleteHistoryItem(${item.id})">삭제</button>
+        </div>
       `;
       list.appendChild(card);
     });
+  }
+
+  function deleteHistoryItem(id) {
+    historyItems = historyItems.filter(h => h.id !== id);
+    updateHistoryUI();
+  }
+
+  function clearAllHistory() {
+    if (confirm('최근 작업 목록을 모두 비우시겠습니까?')) {
+      historyItems = [];
+      updateHistoryUI();
+    }
   }
 
   function reDownload(url, title) {
