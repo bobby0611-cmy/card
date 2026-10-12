@@ -33,7 +33,6 @@
       .main-layout { grid-template-columns: 1fr; }
     }
 
-    /* 패널 공통 */
     .panel {
       background: #ffffff;
       padding: 20px;
@@ -43,7 +42,6 @@
       overflow-y: auto;
     }
 
-    /* 탭 메뉴 */
     .tab-container { display: flex; gap: 8px; margin-bottom: 16px; }
     .tab-btn {
       flex: 1; padding: 12px; background: #e2e8f0; color: #64748b;
@@ -63,7 +61,6 @@
     .btn-preset { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .flex-row { display: flex; gap: 8px; align-items: center; }
 
-    /* 미리보기 중앙 영역 */
     .preview-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; }
     
     canvas {
@@ -80,7 +77,6 @@
     .btn-success { background: #10b981; color: white; margin-top: 6px; }
     .btn-success:hover { background: #059669; }
 
-    /* 사진 카드 업로드 리스트 */
     .btn-add-photo {
       width: 100%; padding: 10px; background: #3b82f6; color: white; border: none;
       border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 12px;
@@ -106,7 +102,6 @@
     .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
     .btn-del:hover { background: #dc2626; color: white; }
 
-    /* 히스토리 리스트 */
     .history-list { display: flex; flex-direction: column; gap: 12px; }
     .history-card {
       background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
@@ -136,20 +131,18 @@
 </div>
 
 <div class="main-layout">
-  <!-- 1. 좌측 편집 패널 -->
   <div class="panel">
     <div class="tab-container">
       <button class="tab-btn active" id="btnCoverTab" onclick="switchTab('cover')">📌 표지 제작</button>
       <button class="tab-btn" id="btnPhotoTab" onclick="switchTab('photo')">📷 본문 사진 목록</button>
     </div>
 
-    <!-- 공통 테마 -->
     <h2>🎨 공통 테마 설정</h2>
     <div class="color-presets">
+      <div class="btn-preset" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);" onclick="setTheme('peach')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #38ef7d, #11998e, #ffe000);" onclick="setTheme('cyanYellow')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);" onclick="setTheme('pinkBlue')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);" onclick="setTheme('sky')"></div>
-      <div class="btn-preset" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);" onclick="setTheme('peach')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #667eea, #764ba2);" onclick="setTheme('purple')"></div>
       <div class="btn-preset" style="background: #ffffff; border: 1px solid #ccc;" onclick="setTheme('white')"></div>
     </div>
@@ -160,8 +153,8 @@
         <option value="gradient">그라데이션</option>
         <option value="solid">단색</option>
       </select>
-      <input type="color" id="bgColor1" value="#11998e" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
-      <input type="color" id="bgColor2" value="#ffe000" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor1" value="#ff9a9e" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor2" value="#fecfef" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
     </div>
 
     <div class="form-group">
@@ -174,16 +167,16 @@
       <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 편집 -->
+    <!-- 탭 1: 표지 편집 (예시 문구 변경 완료!) -->
     <div id="coverTab" class="tab-content active">
       <h2>📌 표지 문구 및 사진</h2>
       <div class="form-group">
-        <label>상단 소제목 (예: 5월의 샛별)</label>
-        <input type="text" id="subTitle" value="5월의 샛별" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <label>상단 소제목</label>
+        <input type="text" id="subTitle" value="10월의 샛별" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>메인 제목 (예: 구기대회)</label>
-        <input type="text" id="mainTitle" value="구기대회" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <label>메인 제목</label>
+        <input type="text" id="mainTitle" value="가을 운동회" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>형광펜 하이라이트 색상</label>
@@ -191,11 +184,11 @@
       </div>
       <div class="form-group">
         <label>본문 설명 문구 (엔터 가능)</label>
-        <textarea id="bodyText" rows="2" onkeyup="drawCanvas()" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
+        <textarea id="bodyText" rows="2" onkeyup="drawCanvas()" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
       </div>
       <div class="form-group">
         <label>하단 해시태그</label>
-        <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" onkeyup="drawCanvas()" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>표지용 사진 선택 (선택 사항)</label>
@@ -203,7 +196,6 @@
       </div>
     </div>
 
-    <!-- 탭 2: 본문 사진 관리 -->
     <div id="photoTab" class="tab-content">
       <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
@@ -214,7 +206,6 @@
     </div>
   </div>
 
-  <!-- 2. 중앙 실시간 미리보기 및 다운로드 -->
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
@@ -222,7 +213,6 @@
     <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지 + 본문사진 '긴 1장 이미지'로 통째 저장</button>
   </div>
 
-  <!-- 3. 우측 최근 만든 작업 목록 (히스토리) -->
   <div class="panel">
     <h2>
       📜 최근 작업 목록
@@ -263,18 +253,18 @@
     const dCanvas = document.createElement('canvas');
     dCanvas.width = 600; dCanvas.height = 360;
     const dCtx = dCanvas.getContext('2d');
-    dCtx.fillStyle = '#4ade80'; dCtx.fillRect(0, 0, 600, 360);
-    dCtx.fillStyle = '#22c55e'; dCtx.fillRect(0, 240, 600, 120);
+    dCtx.fillStyle = '#ff7675'; dCtx.fillRect(0, 0, 600, 360);
+    dCtx.fillStyle = '#d63031'; dCtx.fillRect(0, 240, 600, 120);
     dCtx.fillStyle = '#ffffff'; dCtx.beginPath(); dCtx.arc(300, 180, 50, 0, Math.PI * 2); dCtx.fill();
     dCtx.fillStyle = '#000000'; dCtx.font = '24px sans-serif'; dCtx.textAlign = 'center';
-    dCtx.fillText('⚽ 행사 사진 영역', 300, 188);
+    dCtx.fillText('🏃 운동회 사진 영역', 300, 188);
 
     const img = new Image();
     img.src = dCanvas.toDataURL();
     img.onload = () => {
       coverImage = img;
       const initialId = Date.now();
-      photoList = [{ id: initialId, img: img, badge: '<5학년>', name: '구기대회_사진1.jpg' }];
+      photoList = [{ id: initialId, img: img, badge: '<1학년>', name: '운동회_사진1.jpg' }];
       selectedPhotoId = initialId;
       renderPhotoCardsUI();
       drawCanvas();
@@ -446,7 +436,6 @@
     );
   }
 
-  // 100% 안 안전 렌더링 함수
   function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
     targetCtx.clearRect(0, 0, width, height);
     
@@ -454,10 +443,9 @@
     const fontChoice = fontSelectEl ? fontSelectEl.value : 'GmarketSansBold';
     const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
 
-    // 1. 배경
     const bgType = document.getElementById('bgType') ? document.getElementById('bgType').value : 'gradient';
-    const color1 = document.getElementById('bgColor1') ? document.getElementById('bgColor1').value : '#11998e';
-    const color2 = document.getElementById('bgColor2') ? document.getElementById('bgColor2').value : '#ffe000';
+    const color1 = document.getElementById('bgColor1') ? document.getElementById('bgColor1').value : '#ff9a9e';
+    const color2 = document.getElementById('bgColor2') ? document.getElementById('bgColor2').value : '#fecfef';
 
     if (bgType === 'gradient') {
       const grad = targetCtx.createLinearGradient(0, 0, width, height);
@@ -471,7 +459,6 @@
 
     drawConfettiToCtx(targetCtx, width, height);
 
-    // 2. 노트 바탕
     const margin = 50;
     const noteWidth = width - (margin * 2);
     const noteHeight = height - (margin * 2);
@@ -488,7 +475,6 @@
     targetCtx.lineWidth = 4;
     targetCtx.strokeRect(margin, margin, noteWidth, noteHeight);
 
-    // 모눈종이 격자
     targetCtx.strokeStyle = '#e5e7eb';
     targetCtx.lineWidth = 1;
     const gridSize = 20;
@@ -499,7 +485,6 @@
       targetCtx.beginPath(); targetCtx.moveTo(margin, y); targetCtx.lineTo(margin + noteWidth, y); targetCtx.stroke();
     }
 
-    // 스프링 고리
     const springCount = 6;
     const springSpacing = noteWidth / (springCount + 1);
     for (let i = 1; i <= springCount; i++) {
@@ -510,21 +495,18 @@
       targetCtx.fillRect(sx - 6, margin - 15, 12, 30);
     }
 
-    // 3. 표지 모드 / 본문사진 모드 그리기
     if (mode === 'cover') {
       const boxX = margin + 40; const boxY = margin + 70; const boxW = noteWidth - 80; const boxH = 150;
       targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
-      // 소제목
       const subEl = document.getElementById('subTitle');
-      const subText = subEl ? subEl.value : '5월의 샛별';
+      const subText = subEl ? subEl.value : '10월의 샛별';
       targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 45);
 
-      // 메인제목 & 형광펜
       const mainEl = document.getElementById('mainTitle');
-      const mainText = mainEl ? mainEl.value : '구기대회';
+      const mainText = mainEl ? mainEl.value : '가을 운동회';
       const hlEl = document.getElementById('highlightColor');
       const hlColor = hlEl ? hlEl.value : '#ffdc34';
 
@@ -537,11 +519,9 @@
       targetCtx.fillStyle = '#000000';
       targetCtx.fillText(mainText, width / 2, boxY + 120);
 
-      // 대표 사진
       const imgX = margin + 40; const imgY = boxY + boxH + 30; const imgW = noteWidth - 80; const imgH = 310;
       if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
 
-      // 본문 문구
       const bodyEl = document.getElementById('bodyText');
       const bodyText = bodyEl ? bodyEl.value : '';
       const lines = bodyText.split('\n');
@@ -549,18 +529,15 @@
       let startY = imgY + imgH + 50;
       lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 34; });
 
-      // 해시태그
       const hashEl = document.getElementById('hashTags');
       const hashTags = hashEl ? hashEl.value : '';
       targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
       targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
     } else {
-      // 본문 사진 모드
       const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
       if (imgObj) {
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
         
-        // 학년 라벨 표시
         if (badgeText && badgeText.trim() !== '') {
           targetCtx.font = `bold 32px "${selectedFont}", sans-serif`;
           const bWidth = targetCtx.measureText(badgeText).width + 36;
@@ -632,7 +609,6 @@
     link.download = `${title}_개별.png`; link.href = dataUrl; link.click();
   }
 
-  // 🚀 표지 + 본문사진 통째로 '긴 1장 이미지' 생성 다운로드
   function downloadCombinedLongImage() {
     const cardCount = 1 + photoList.length;
     const cardWidth = 800;
@@ -647,11 +623,9 @@
     tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
     const tempCtx = tempCanvas.getContext('2d');
     
-    // 1. 표지 렌더링
     renderCardToContext(tempCtx, 'cover', coverImage, '');
     longCtx.drawImage(tempCanvas, 0, 0);
 
-    // 2. 본문 사진들 렌더링
     photoList.forEach((photoItem, i) => {
       tempCtx.clearRect(0, 0, cardWidth, cardHeight);
       renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge || '');
