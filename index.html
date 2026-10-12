@@ -72,9 +72,11 @@
       width: 100%; max-width: 500px; padding: 12px; font-size: 0.95rem; font-weight: bold;
       border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
+    .btn-apply { background: #0284c7; color: white; margin-bottom: 4px; }
+    .btn-apply:hover { background: #0369a1; }
     .btn-primary { background: #2563eb; color: white; }
     .btn-primary:hover { background: #1d4ed8; }
-    .btn-success { background: #10b981; color: white; margin-top: 6px; }
+    .btn-success { background: #10b981; color: white; margin-top: 2px; }
     .btn-success:hover { background: #059669; }
 
     .btn-add-photo {
@@ -160,23 +162,23 @@
     <div class="form-group">
       <label>폰트 선택 / 파일 업로드</label>
       <select id="fontSelect" onchange="drawCanvas()">
+        <option value="sans-serif">기본 고딕 (가장 안정적)</option>
         <option value="GmarketSansBold">지마켓 산스 (강조용)</option>
         <option value="OTWelcomeRA">웰컴체 (귀여움)</option>
-        <option value="SUIT-Regular">SUIT (깔끔함)</option>
       </select>
       <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 편집 (예시 문구 변경 완료!) -->
+    <!-- 탭 1: 표지 편집 -->
     <div id="coverTab" class="tab-content active">
       <h2>📌 표지 문구 및 사진</h2>
       <div class="form-group">
         <label>상단 소제목</label>
-        <input type="text" id="subTitle" value="10월의 샛별" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <input type="text" id="subTitle" value="10월의 샛별" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>메인 제목</label>
-        <input type="text" id="mainTitle" value="가을 운동회" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <input type="text" id="mainTitle" value="가을 운동회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>형광펜 하이라이트 색상</label>
@@ -184,11 +186,11 @@
       </div>
       <div class="form-group">
         <label>본문 설명 문구 (엔터 가능)</label>
-        <textarea id="bodyText" rows="2" onkeyup="drawCanvas()" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
+        <textarea id="bodyText" rows="2" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
       </div>
       <div class="form-group">
         <label>하단 해시태그</label>
-        <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" onkeyup="drawCanvas()" oninput="drawCanvas()">
+        <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
         <label>표지용 사진 선택 (선택 사항)</label>
@@ -209,6 +211,7 @@
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
+    <button class="btn-action btn-apply" onclick="drawCanvas()">⚡ [미리보기 / 캔버스 적용]</button>
     <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 화면 개별 저장 (PNG)</button>
     <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지 + 본문사진 '긴 1장 이미지'로 통째 저장</button>
   </div>
@@ -344,7 +347,7 @@
           </div>
         </div>
         <div style="margin-top:2px;">
-          <input type="text" value="${item.badge || ''}" placeholder="라벨 직접 수정 (예: <저학년>)" onkeyup="updateBadgeDirectly(${item.id}, this.value)" oninput="updateBadgeDirectly(${item.id}, this.value)">
+          <input type="text" value="${item.badge || ''}" placeholder="라벨 직접 수정 (예: <저학년>)" oninput="updateBadgeDirectly(${item.id}, this.value)">
         </div>
       `;
       container.appendChild(card);
@@ -427,20 +430,24 @@
   }
 
   function drawCanvas() {
-    const currentPhoto = photoList.find(p => p.id === selectedPhotoId);
-    renderCardToContext(
-      ctx, 
-      currentMode, 
-      currentMode === 'cover' ? coverImage : (currentPhoto ? currentPhoto.img : null), 
-      currentPhoto ? (currentPhoto.badge || '') : ''
-    );
+    try {
+      const currentPhoto = photoList.find(p => p.id === selectedPhotoId);
+      renderCardToContext(
+        ctx, 
+        currentMode, 
+        currentMode === 'cover' ? coverImage : (currentPhoto ? currentPhoto.img : null), 
+        currentPhoto ? (currentPhoto.badge || '') : ''
+      );
+    } catch(err) {
+      console.error("렌더링 도중 에러가 발생했으나 안전하게 처리됨:", err);
+    }
   }
 
   function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
     targetCtx.clearRect(0, 0, width, height);
     
     const fontSelectEl = document.getElementById('fontSelect');
-    const fontChoice = fontSelectEl ? fontSelectEl.value : 'GmarketSansBold';
+    const fontChoice = fontSelectEl ? fontSelectEl.value : 'sans-serif';
     const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
 
     const bgType = document.getElementById('bgType') ? document.getElementById('bgType').value : 'gradient';
@@ -501,12 +508,12 @@
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
       const subEl = document.getElementById('subTitle');
-      const subText = subEl ? subEl.value : '10월의 샛별';
+      const subText = subEl ? subEl.value : '';
       targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 45);
 
       const mainEl = document.getElementById('mainTitle');
-      const mainText = mainEl ? mainEl.value : '가을 운동회';
+      const mainText = mainEl ? mainEl.value : '';
       const hlEl = document.getElementById('highlightColor');
       const hlColor = hlEl ? hlEl.value : '#ffdc34';
 
