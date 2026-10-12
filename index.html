@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학교 홈페이지 썸네일 자동 생성기</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
+  <style>
+    @font-face {
+      font-family: 'GmarketSansBold';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+    }
+    @font-face {
+      font-family: 'OTWelcomeRA';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/OTWelcomeRA.woff2') format('woff2');
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'SUIT-Regular', sans-serif; }
+    body { background-color: #f1f5f9; color: #1e293b; padding: 20px; }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    
+    .editor-panel {
+      flex: 1;
+      min-width: 340px;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .preview-panel {
+      flex: 1.2;
+      min-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h2 { font-size: 1.3rem; margin-bottom: 16px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+    .section-title { font-size: 0.95rem; font-weight: bold; margin: 16px 0 8px; color: #3b82f6; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
+    
+    input[type="text"], select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .btn-preset {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
+      cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .flex-row { display: flex; gap: 10px; align-items: center; }
+
+    canvas {
+      width: 100%;
+      max-width: 540px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      background: #fff;
+    }
+
+    .btn-download {
+      width: 100%;
+      max-width: 540px;
+      padding: 14px;
+      background: #2563eb;
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="editor-panel">
+    <h2>🎨 카드뉴스 템플릿 설정</h2>
+
+    <div class="section-title">1. 배경 색상 및 그라데이션</div>
+    <div class="color-presets">
+      <div class="btn-preset" style="background: linear-gradient(135deg, #38ef7d, #11998e, #ffe000);" onclick="setTheme('cyanYellow')"></div>
+      <div class="btn-preset" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);" onclick="setTheme('pinkBlue')"></div>
+      <div class="btn-preset" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);" onclick="setTheme('sky')"></div>
+      <div class="btn-preset" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);" onclick="setTheme('peach')"></div>
+      <div class="btn-preset" style="background: linear-gradient(135deg, #667eea, #764ba2);" onclick="setTheme('purple')"></div>
+      <div class="btn-preset" style="background: #ffffff; border: 1px solid #ccc;" onclick="setTheme('white')"></div>
+    </div>
+    
+    <div class="form-group flex-row">
+      <label style="margin:0;">배경 타입:</label>
+      <select id="bgType" onchange="drawCanvas()" style="width: 120px;">
+        <option value="gradient">그라데이션</option>
+        <option value="solid">단색</option>
+      </select>
+      <input type="color" id="bgColor1" value="#11998e" onchange="drawCanvas()" style="width:40px; height:32px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor2" value="#ffe000" onchange="drawCanvas()" style="width:40px; height:32px; border:none; cursor:pointer;">
+    </div>
+
+    <div class="section-title">2. 폰트 스타일</div>
+    <div class="form-group">
+      <label>기본 폰트 선택</label>
+      <select id="fontSelect" onchange="drawCanvas()">
+        <option value="GmarketSansBold">지마켓 산스 (강조용 굵은체)</option>
+        <option value="OTWelcomeRA">웰컴체 (귀여운 타이틀)</option>
+        <option value="SUIT-Regular">SUIT (깔끔한 고딕체)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>폰트 파일 업로드 (.ttf, .otf, .woff)</label>
+      <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff, .woff2" onchange="loadCustomFont(event)">
+    </div>
+
+    <div class="section-title">3. 제목 및 내용 입력</div>
+    <div class="form-group">
+      <label>상단 소제목 (예: 5월의 샛별)</label>
+      <input type="text" id="subTitle" value="5월의 샛별" oninput="drawCanvas()">
+    </div>
+    <div class="form-group">
+      <label>메인 제목 (예: 구기대회)</label>
+      <input type="text" id="mainTitle" value="구기대회" oninput="drawCanvas()">
+    </div>
+    <div class="form-group">
+      <label>형광펜 하이라이트 색상</label>
+      <input type="color" id="highlightColor" value="#ffdc34" onchange="drawCanvas()" style="width:100%; height:32px; border:none; cursor:pointer;">
+    </div>
+    <div class="form-group">
+      <label>본문 내용 (엔터 구분 가능)</label>
+      <textarea id="bodyText" rows="2" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
+    </div>
+    <div class="form-group">
+      <label>하단 해시태그</label>
+      <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" oninput="drawCanvas()">
+    </div>
+
+    <div class="section-title">4. 사진 및 학년 라벨</div>
+    <div class="form-group">
+      <label>행사 사진 선택</label>
+      <input type="file" id="imageInput" accept="image/*" onchange="loadImage(event)">
+    </div>
+    <div class="form-group flex-row">
+      <label style="margin:0;"><input type="checkbox" id="showBadge" checked onchange="drawCanvas()"> 학년 표시 사용</label>
+      <input type="text" id="badgeText" value="<5학년>" oninput="drawCanvas()" style="width: 100px; text-align: center;">
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
+    <button class="btn-download" onclick="downloadImage()">💾 이미지 다운로드 (PNG)</button>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('thumbnailCanvas');
+  const ctx = canvas.getContext('2d');
+  let uploadedImage = null;
+  let customFontName = null;
+
+  function createDefaultImage() {
+    const dummyCanvas = document.createElement('canvas');
+    dummyCanvas.width = 600;
+    dummyCanvas.height = 360;
+    const dCtx = dummyCanvas.getContext('2d');
+    dCtx.fillStyle = '#4ade80';
+    dCtx.fillRect(0, 0, 600, 360);
+    dCtx.fillStyle = '#22c55e';
+    dCtx.fillRect(0, 240, 600, 120);
+    dCtx.fillStyle = '#ffffff';
+    dCtx.beginPath();
+    dCtx.arc(300, 180, 50, 0, Math.PI * 2);
+    dCtx.fill();
+    dCtx.fillStyle = '#000000';
+    dCtx.font = '24px sans-serif';
+    dCtx.textAlign = 'center';
+    dCtx.fillText('⚽ 행사 사진 영역', 300, 188);
+
+    const img = new Image();
+    img.src = dummyCanvas.toDataURL();
+    img.onload = () => { uploadedImage = img; drawCanvas(); };
+  }
+
+  function loadCustomFont(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const fontName = 'CustomFont_' + Date.now();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const font = new FontFace(fontName, e.target.result);
+      font.load().then(function(loadedFont) {
+        document.fonts.add(loadedFont);
+        customFontName = fontName;
+        const fontSelect = document.getElementById('fontSelect');
+        const option = document.createElement('option');
+        option.value = fontName;
+        option.textContent = `업로드 폰트 (${file.name})`;
+        fontSelect.appendChild(option);
+        fontSelect.value = fontName;
+        drawCanvas();
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function setTheme(type) {
+    const bgType = document.getElementById('bgType');
+    const bg1 = document.getElementById('bgColor1');
+    const bg2 = document.getElementById('bgColor2');
+    bgType.value = 'gradient';
+    if(type === 'cyanYellow') { bg1.value = '#00c6ff'; bg2.value = '#f5af19'; }
+    else if(type === 'pinkBlue') { bg1.value = '#fbc2eb'; bg2.value = '#a6c1ee'; }
+    else if(type === 'sky') { bg1.value = '#a1c4fd'; bg2.value = '#c2e9fb'; }
+    else if(type === 'peach') { bg1.value = '#ff9a9e'; bg2.value = '#fecfef'; }
+    else if(type === 'purple') { bg1.value = '#667eea'; bg2.value = '#764ba2'; }
+    else if(type === 'white') { bgType.value = 'solid'; bg1.value = '#ffffff'; }
+    drawCanvas();
+  }
+
+  function loadImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() { uploadedImage = img; drawCanvas(); }
+      img.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  }
+
+  function drawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const fontChoice = document.getElementById('fontSelect').value;
+    const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
+
+    const bgType = document.getElementById('bgType').value;
+    const color1 = document.getElementById('bgColor1').value;
+    const color2 = document.getElementById('bgColor2').value;
+
+    if (bgType === 'gradient') {
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      grad.addColorStop(0, color1);
+      grad.addColorStop(1, color2);
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = color1;
+    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawConfetti();
+
+    const margin = 50;
+    const noteWidth = canvas.width - (margin * 2);
+    const noteHeight = canvas.height - (margin * 2);
+    
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetY = 10;
+    ctx.fillRect(margin, margin, noteWidth, noteHeight);
+    ctx.restore();
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(margin, margin, noteWidth, noteHeight);
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    const gridSize = 20;
+    for (let x = margin + gridSize; x < margin + noteWidth; x += gridSize) {
+      ctx.beginPath(); ctx.moveTo(x, margin); ctx.lineTo(x, margin + noteHeight); ctx.stroke();
+    }
+    for (let y = margin + gridSize; y < margin + noteHeight; y += gridSize) {
+      ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(margin + noteWidth, y); ctx.stroke();
+    }
+
+    const springCount = 6;
+    const springSpacing = noteWidth / (springCount + 1);
+    for (let i = 1; i <= springCount; i++) {
+      const sx = margin + (springSpacing * i);
+      const sy = margin + 25;
+      ctx.fillStyle = '#000000';
+      ctx.beginPath(); ctx.arc(sx, sy, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(sx - 6, margin - 15, 12, 30);
+    }
+
+    const boxX = margin + 40;
+    const boxY = margin + 70;
+    const boxW = noteWidth - 80;
+    const boxH = 150;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 4;
+    roundRect(ctx, boxX, boxY, boxW, boxH, 20, true, true);
+
+    const subText = document.getElementById('subTitle').value;
+    ctx.fillStyle = '#000000';
+    ctx.font = `bold 28px "${selectedFont}", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(subText, canvas.width / 2, boxY + 45);
+
+    const mainText = document.getElementById('mainTitle').value;
+    const hlColor = document.getElementById('highlightColor').value;
+    
+    ctx.font = `bold 54px "${selectedFont}", sans-serif`;
+    const textWidth = ctx.measureText(mainText).width;
+
+    ctx.fillStyle = hlColor;
+    ctx.fillRect((canvas.width / 2) - (textWidth / 2) - 10, boxY + 112, textWidth + 20, 18);
+
+    ctx.fillStyle = '#000000';
+    ctx.fillText(mainText, canvas.width / 2, boxY + 120);
+
+    const imgX = margin + 40;
+    const imgY = boxY + boxH + 30;
+    const imgW = noteWidth - 80;
+    const imgH = 310;
+
+    if (uploadedImage) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(imgX, imgY, imgW, imgH); ctx.clip();
+
+      const imgRatio = uploadedImage.width / uploadedImage.height;
+      const targetRatio = imgW / imgH;
+      let renderW, renderH, renderX, renderY;
+
+      if (imgRatio > targetRatio) {
+        renderH = imgH; renderW = imgH * imgRatio;
+        renderX = imgX - (renderW - imgW) / 2; renderY = imgY;
+      } else {
+        renderW = imgW; renderH = imgW / imgRatio;
+        renderX = imgX; renderY = imgY - (renderH - imgH) / 2;
+      }
+
+      ctx.drawImage(uploadedImage, renderX, renderY, renderW, renderH);
+      ctx.restore();
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(imgX, imgY, imgW, imgH);
+
+      const showBadge = document.getElementById('showBadge').checked;
+      const badgeText = document.getElementById('badgeText').value;
+
+      if (showBadge && badgeText) {
+        ctx.font = `bold 22px "${selectedFont}", sans-serif`;
+        const bWidth = ctx.measureText(badgeText).width + 24;
+        const bHeight = 38;
+        const bX = imgX + imgW - bWidth - 12;
+        const bY = imgY + 12;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        roundRect(ctx, bX, bY, bWidth, bHeight, 8, true, true);
+
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText(badgeText, bX + (bWidth / 2), bY + 27);
+      }
+    }
+
+    const bodyText = document.getElementById('bodyText').value;
+    const lines = bodyText.split('\n');
+    ctx.fillStyle = '#1e293b';
+    ctx.font = `24px "${selectedFont}", sans-serif`;
+    ctx.textAlign = 'center';
+
+    let startY = imgY + imgH + 50;
+    lines.forEach((line) => {
+      ctx.fillText(line, canvas.width / 2, startY);
+      startY += 34;
+    });
+
+    const hashTags = document.getElementById('hashTags').value;
+    ctx.fillStyle = '#64748b';
+    ctx.font = `20px "${selectedFont}", sans-serif`;
+    ctx.fillText(hashTags, canvas.width / 2, margin + noteHeight - 35);
+  }
+
+  function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  function drawConfetti() {
+    const shapes = [
+      { type: 'circle', x: 25, y: 170, color: '#ff4757', r: 12 },
+      { type: 'rect', x: 18, y: 300, color: '#2ed573', r: 16 },
+      { type: 'circle', x: 30, y: 600, color: '#eccc68', r: 14 },
+      { type: 'triangle', x: 775, y: 500, color: '#2ed573', r: 15 },
+      { type: 'circle', x: 770, y: 200, color: '#3742fa', r: 13 },
+      { type: 'rect', x: 765, y: 400, color: '#ffa502', r: 14 },
+      { type: 'triangle', x: 340, y: 25, color: '#e84393', r: 16 },
+      { type: 'rect', x: 570, y: 940, color: '#eccc68', r: 14 }
+    ];
+
+    shapes.forEach(s => {
+      ctx.fillStyle = s.color;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      if (s.type === 'circle') {
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else if (s.type === 'rect') {
+        ctx.rect(s.x - s.r, s.y - s.r, s.r * 2, s.r * 2); ctx.fill(); ctx.stroke();
+      } else if (s.type === 'triangle') {
+        ctx.moveTo(s.x, s.y - s.r); ctx.lineTo(s.x + s.r, s.y + s.r); ctx.lineTo(s.x - s.r, s.y + s.r);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+    });
+  }
+
+  function downloadImage() {
+    const mainTitle = document.getElementById('mainTitle').value || '학교_썸네일';
+    const link = document.createElement('a');
+    link.download = `${mainTitle}_썸네일.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  window.onload = function() { createDefaultImage(); };
+</script>
+
+</body>
+</html>
