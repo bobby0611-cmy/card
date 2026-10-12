@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>학교 홈페이지 원스톱 이미지 자동 생성기</title>
+  <title>학교 홈페이지 게시물 통합 자동 생성기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
   <style>
     @font-face {
@@ -25,7 +25,7 @@
       max-width: 1400px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 360px 1fr 280px;
+      grid-template-columns: 380px 1fr 280px;
       gap: 20px;
     }
 
@@ -46,8 +46,8 @@
     /* 탭 메뉴 */
     .tab-container { display: flex; gap: 8px; margin-bottom: 16px; }
     .tab-btn {
-      flex: 1; padding: 10px; background: #e2e8f0; color: #64748b;
-      font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+      flex: 1; padding: 12px; background: #e2e8f0; color: #64748b;
+      font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
     }
     .tab-btn.active { background: #2563eb; color: #fff; }
 
@@ -57,7 +57,7 @@
     label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
     
     input[type="text"], select, textarea {
-      width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; outline: none;
+      width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem; outline: none;
     }
 
     .color-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -81,13 +81,32 @@
     .btn-success { background: #10b981; color: white; margin-top: 6px; }
     .btn-success:hover { background: #059669; }
 
-    /* 다중 사진 목록 스타일 */
-    .photo-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
-    .photo-item {
-      display: flex; align-items: center; justify-content: space-between;
-      background: #f8fafc; padding: 6px 10px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.8rem;
+    /* 직관적인 사진 업로드 & 학년 관리 리스트 */
+    .btn-add-photo {
+      width: 100%; padding: 10px; background: #3b82f6; color: white; border: none;
+      border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 12px;
     }
-    .photo-item input { width: 90px; padding: 3px 6px; font-size: 0.75rem; }
+    .btn-add-photo:hover { background: #2563eb; }
+
+    .photo-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+    .photo-card {
+      background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 10px;
+      display: flex; flex-direction: column; gap: 8px; transition: border-color 0.2s;
+    }
+    .photo-card.selected { border-color: #2563eb; background: #eff6ff; }
+    .photo-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .photo-card-header img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc; }
+    .photo-card-title { font-size: 0.8rem; font-weight: bold; color: #334155; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Quick Badge Buttons */
+    .badge-btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+    .btn-badge {
+      padding: 3px 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px;
+      font-size: 0.72rem; cursor: pointer; font-weight: 600; color: #475569;
+    }
+    .btn-badge:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
+    .btn-del:hover { background: #dc2626; color: white; }
 
     /* 히스토리 사이드바 */
     .history-list { display: flex; flex-direction: column; gap: 12px; }
@@ -116,11 +135,11 @@
   <div class="panel">
     <div class="tab-container">
       <button class="tab-btn active" onclick="switchTab('cover')">📌 표지 제작</button>
-      <button class="tab-btn" onclick="switchTab('photo')">📷 본문 사진 (다중)</button>
+      <button class="tab-btn" onclick="switchTab('photo')">📷 본문 사진 목록</button>
     </div>
 
     <!-- 공통 테마 -->
-    <h2>🎨 공통 테마</h2>
+    <h2>🎨 공통 테마 설정</h2>
     <div class="color-presets">
       <div class="btn-preset" style="background: linear-gradient(135deg, #38ef7d, #11998e, #ffe000);" onclick="setTheme('cyanYellow')"></div>
       <div class="btn-preset" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);" onclick="setTheme('pinkBlue')"></div>
@@ -132,7 +151,7 @@
     
     <div class="form-group flex-row">
       <label style="margin:0;">배경:</label>
-      <select id="bgType" onchange="drawCanvas()" style="width: 90px;">
+      <select id="bgType" onchange="drawCanvas()" style="width: 100px;">
         <option value="gradient">그라데이션</option>
         <option value="solid">단색</option>
       </select>
@@ -143,53 +162,52 @@
     <div class="form-group">
       <label>폰트 선택 / 파일 업로드</label>
       <select id="fontSelect" onchange="drawCanvas()">
-        <option value="GmarketSansBold">지마켓 산스 (강조)</option>
+        <option value="GmarketSansBold">지마켓 산스 (강조용)</option>
         <option value="OTWelcomeRA">웰컴체 (귀여움)</option>
-        <option value="SUIT-Regular">SUIT (깔끔)</option>
+        <option value="SUIT-Regular">SUIT (깔끔함)</option>
       </select>
       <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 -->
+    <!-- 탭 1: 표지 편집 -->
     <div id="coverTab" class="tab-content active">
-      <h2>📌 표지 문구</h2>
+      <h2>📌 표지 문구 및 사진</h2>
       <div class="form-group">
-        <label>상단 소제목</label>
+        <label>상단 소제목 (예: 5월의 샛별)</label>
         <input type="text" id="subTitle" value="5월의 샛별" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>메인 제목</label>
+        <label>메인 제목 (예: 구기대회)</label>
         <input type="text" id="mainTitle" value="구기대회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>형광펜 색상</label>
+        <label>형광펜 하이라이트 색상</label>
         <input type="color" id="highlightColor" value="#ffdc34" onchange="drawCanvas()" style="width:100%; height:26px; border:none; cursor:pointer;">
       </div>
       <div class="form-group">
-        <label>본문 내용</label>
+        <label>본문 설명 문구 (엔터 가능)</label>
         <textarea id="bodyText" rows="2" oninput="drawCanvas()">축구, 넷볼, 티볼! 고학년들의 신나는 구기대회</textarea>
       </div>
       <div class="form-group">
-        <label>해시태그</label>
+        <label>하단 해시태그</label>
         <input type="text" id="hashTags" value="#샛별초등학교 #구기대회" oninput="drawCanvas()">
       </div>
       <div class="form-group">
-        <label>표지용 대표 사진</label>
+        <label>표지용 사진 선택 (선택 사항)</label>
         <input type="file" id="coverImageInput" accept="image/*" onchange="loadCoverImage(event)">
       </div>
     </div>
 
-    <!-- 탭 2: 다중 사진 -->
+    <!-- 탭 2: 직관적인 본문 사진 관리 -->
     <div id="photoTab" class="tab-content">
-      <h2>📷 본문 사진 (여러 장 선택 가능)</h2>
-      <div class="form-group">
-        <label>사진 복수 선택 (Ctrl/Shift 누르고 클릭)</label>
-        <input type="file" id="multiFileInput" accept="image/*" multiple onchange="loadMultiplePhotos(event)">
-      </div>
+      <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
-      <div class="section-title">업로드된 사진 목록 & 학년 설정</div>
-      <div id="photoList" class="photo-list">
-        <div style="font-size:0.8rem; color:#94a3b8;">사진을 첨부하면 여기에 목록이 표시됩니다.</div>
+      <!-- 사진 추가 버튼 -->
+      <button class="btn-add-photo" onclick="document.getElementById('photoFileInput').click()">➕ 사진 추가하기 (클릭)</button>
+      <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;" onchange="handleAddPhotos(event)">
+
+      <div id="photoCardList" class="photo-card-list">
+        <!-- 동적으로 추가되는 사진 카드들 -->
       </div>
     </div>
   </div>
@@ -198,8 +216,8 @@
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
-    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 화면 개별 저장 (PNG)</button>
-    <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지+사진 전체 '긴 한 장 이미지'로 저장</button>
+    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 렌더링 화면 저장 (PNG)</button>
+    <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지 + 본문사진 '긴 1장 이미지'로 통째 저장</button>
   </div>
 
   <!-- 3. 우측 최근 만든 작업 목록 (히스토리) -->
@@ -207,7 +225,7 @@
     <h2>📜 최근 만든 작업물</h2>
     <div id="historyList" class="history-list">
       <div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">
-        다운로드한 이미지 내역이<br>여기에 자동으로 보관됩니다.
+        다운로드한 이미지 내역이<br>여기에 보관됩니다.
       </div>
     </div>
   </div>
@@ -221,9 +239,9 @@
   let coverImage = null;
   let customFontName = null;
 
-  // 다중 사진 데이터 구조 [{ img: ImageObject, badge: '<1학년>', name: '파일명' }]
+  // 본문 사진 데이터 [{ id, img, badge, name }]
   let photoList = [];
-  let selectedPhotoIndex = 0;
+  let selectedPhotoId = null;
 
   let historyItems = [];
 
@@ -245,7 +263,8 @@
     drawCanvas();
   }
 
-  function createDefaultImages() {
+  // 기본 더미 이미지 및 초기 설정
+  function createDefaultSetup() {
     const dCanvas = document.createElement('canvas');
     dCanvas.width = 600; dCanvas.height = 360;
     const dCtx = dCanvas.getContext('2d');
@@ -259,67 +278,115 @@
     img.src = dCanvas.toDataURL();
     img.onload = () => {
       coverImage = img;
-      photoList = [{ img: img, badge: '<1학년>', name: '샘플사진.jpg' }];
-      updatePhotoListUI();
+      const initialId = Date.now();
+      photoList = [{ id: initialId, img: img, badge: '<5학년>', name: '구기대회_사진1.jpg' }];
+      selectedPhotoId = initialId;
+      renderPhotoCardsUI();
       drawCanvas();
     };
   }
 
-  function loadMultiplePhotos(e) {
+  // 사진 추가 처리
+  function handleAddPhotos(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    photoList = [];
-    let loadedCount = 0;
-
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
+          const newId = Date.now() + Math.random();
           photoList.push({
+            id: newId,
             img: img,
-            badge: `<${index + 1}학년>`,
+            badge: '', // 기본은 학년 없음
             name: file.name
           });
-          loadedCount++;
-          if (loadedCount === files.length) {
-            selectedPhotoIndex = 0;
-            updatePhotoListUI();
-            drawCanvas();
-          }
+          selectedPhotoId = newId;
+          renderPhotoCardsUI();
+          drawCanvas();
         };
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
+    e.target.value = ''; // 초기화
   }
 
-  function updatePhotoListUI() {
-    const container = document.getElementById('photoList');
+  // 사진 카드 목록 UI 생성
+  function renderPhotoCardsUI() {
+    const container = document.getElementById('photoCardList');
     container.innerHTML = '';
 
-    photoList.forEach((item, index) => {
-      const div = document.createElement('div');
-      div.className = 'photo-item';
-      div.style.border = index === selectedPhotoIndex ? '2px solid #2563eb' : '1px solid #e2e8f0';
-      div.onclick = () => { selectedPhotoIndex = index; updatePhotoListUI(); drawCanvas(); };
+    if (photoList.length === 0) {
+      container.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">사진이 없습니다.<br>위 버튼을 눌러 사진을 추가하세요!</div>';
+      return;
+    }
 
-      div.innerHTML = `
-        <span style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${index+1}. ${item.name}</span>
+    photoList.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = `photo-card ${item.id === selectedPhotoId ? 'selected' : ''}`;
+      card.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+          selectedPhotoId = item.id;
+          renderPhotoCardsUI();
+          drawCanvas();
+        }
+      };
+
+      card.innerHTML = `
+        <div class="photo-card-header">
+          <img src="${item.img.src}" alt="사진">
+          <span class="photo-card-title">${idx + 1}. ${item.name}</span>
+          <button class="btn-badge btn-del" onclick="deletePhoto(${item.id})">삭제</button>
+        </div>
         <div>
-          <input type="text" value="${item.badge}" oninput="updateBadge(${index}, this.value)">
+          <label style="margin-bottom:2px;">학년 라벨 선택 (클릭):</label>
+          <div class="badge-btn-group">
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<1학년>')">1학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<2학년>')">2학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<3학년>')">3학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<4학년>')">4학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<5학년>')">5학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<6학년>')">6학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<전학년>')">전학년</button>
+            <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '')">없음</button>
+          </div>
+        </div>
+        <div style="margin-top:2px;">
+          <input type="text" value="${item.badge}" placeholder="라벨 직접 수정 (예: <저학년>)" oninput="updateBadgeDirectly(${item.id}, this.value)">
         </div>
       `;
-      container.appendChild(div);
+      container.appendChild(card);
     });
   }
 
-  function updateBadge(index, value) {
-    if (photoList[index]) {
-      photoList[index].badge = value;
+  function setPhotoBadge(id, badgeStr) {
+    const target = photoList.find(p => p.id === id);
+    if (target) {
+      target.badge = badgeStr;
+      selectedPhotoId = id;
+      renderPhotoCardsUI();
       drawCanvas();
     }
+  }
+
+  function updateBadgeDirectly(id, val) {
+    const target = photoList.find(p => p.id === id);
+    if (target) {
+      target.badge = val;
+      drawCanvas();
+    }
+  }
+
+  function deletePhoto(id) {
+    photoList = photoList.filter(p => p.id !== id);
+    if (selectedPhotoId === id) {
+      selectedPhotoId = photoList.length ? photoList[0].id : null;
+    }
+    renderPhotoCardsUI();
+    drawCanvas();
   }
 
   function loadCustomFont(event) {
@@ -371,15 +438,22 @@
   }
 
   function drawCanvas() {
-    renderCardToContext(ctx, currentMode, currentMode === 'cover' ? coverImage : (photoList[selectedPhotoIndex] ? photoList[selectedPhotoIndex].img : null), photoList[selectedPhotoIndex] ? photoList[selectedPhotoIndex].badge : '');
+    const currentPhoto = photoList.find(p => p.id === selectedPhotoId);
+    renderCardToContext(
+      ctx, 
+      currentMode, 
+      currentMode === 'cover' ? coverImage : (currentPhoto ? currentPhoto.img : null), 
+      currentPhoto ? currentPhoto.badge : ''
+    );
   }
 
-  // 렌더링 범용 함수
+  // 범용 렌더링 함수
   function renderCardToContext(targetCtx, mode, imgObj, badgeText, width = 800, height = 800) {
     targetCtx.clearRect(0, 0, width, height);
     const fontChoice = document.getElementById('fontSelect').value;
     const selectedFont = customFontName && fontChoice === customFontName ? customFontName : fontChoice;
 
+    // 1. 배경
     const bgType = document.getElementById('bgType').value;
     const color1 = document.getElementById('bgColor1').value;
     const color2 = document.getElementById('bgColor2').value;
@@ -396,6 +470,7 @@
 
     drawConfettiToCtx(targetCtx, width, height);
 
+    // 2. 스프링 노트 프레임
     const margin = 50;
     const noteWidth = width - (margin * 2);
     const noteHeight = height - (margin * 2);
@@ -412,6 +487,7 @@
     targetCtx.lineWidth = 4;
     targetCtx.strokeRect(margin, margin, noteWidth, noteHeight);
 
+    // 모눈종이 격자
     targetCtx.strokeStyle = '#e5e7eb';
     targetCtx.lineWidth = 1;
     const gridSize = 20;
@@ -422,6 +498,7 @@
       targetCtx.beginPath(); targetCtx.moveTo(margin, y); targetCtx.lineTo(margin + noteWidth, y); targetCtx.stroke();
     }
 
+    // 스프링 고리
     const springCount = 6;
     const springSpacing = noteWidth / (springCount + 1);
     for (let i = 1; i <= springCount; i++) {
@@ -432,15 +509,18 @@
       targetCtx.fillRect(sx - 6, margin - 15, 12, 30);
     }
 
+    // 3. 모드별 렌더링
     if (mode === 'cover') {
       const boxX = margin + 40; const boxY = margin + 70; const boxW = noteWidth - 80; const boxH = 150;
       targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
+      // 상단 소제목
       const subText = document.getElementById('subTitle').value;
       targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 45);
 
+      // 메인 제목 & 형광펜
       const mainText = document.getElementById('mainTitle').value;
       const hlColor = document.getElementById('highlightColor').value;
       targetCtx.font = `bold 54px "${selectedFont}", sans-serif`;
@@ -452,22 +532,28 @@
       targetCtx.fillStyle = '#000000';
       targetCtx.fillText(mainText, width / 2, boxY + 120);
 
+      // 대표 사진
       const imgX = margin + 40; const imgY = boxY + boxH + 30; const imgW = noteWidth - 80; const imgH = 310;
       if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
 
+      // 본문 설명 문구
       const bodyText = document.getElementById('bodyText').value;
       const lines = bodyText.split('\n');
       targetCtx.fillStyle = '#1e293b'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       let startY = imgY + imgH + 50;
       lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 34; });
 
+      // 해시태그
       const hashTags = document.getElementById('hashTags').value;
       targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
       targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
     } else {
+      // 본문 사진 전용 모드
       const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
       if (imgObj) {
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
+        
+        // 학년 라벨
         if (badgeText) {
           targetCtx.font = `bold 32px "${selectedFont}", sans-serif`;
           const bWidth = targetCtx.measureText(badgeText).width + 36;
@@ -481,6 +567,9 @@
           targetCtx.fillStyle = '#000000'; targetCtx.textAlign = 'center';
           targetCtx.fillText(badgeText, bX + (bWidth / 2), bY + 38);
         }
+      } else {
+        targetCtx.fillStyle = '#94a3b8'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
+        targetCtx.fillText('📷 추가된 본문 사진이 없습니다.', width / 2, height / 2);
       }
     }
   }
@@ -526,7 +615,7 @@
     });
   }
 
-  // 단일 개별 저장
+  // 현재 화면 개별 저장
   function downloadCurrent() {
     const dataUrl = canvas.toDataURL('image/png');
     const title = document.getElementById('mainTitle').value || '개별이미지';
@@ -536,9 +625,9 @@
     link.download = `${title}_개별.png`; link.href = dataUrl; link.click();
   }
 
-  // 🚀 핵심: 표지 + 모든 본문 사진 '세로 통합 길다란 이미지'로 저장!
+  // 표지 + 모든 본문 사진 세로 통합 1장 저장
   function downloadCombinedLongImage() {
-    const cardCount = 1 + photoList.length; // 표지 1장 + 사진 개수
+    const cardCount = 1 + photoList.length;
     const cardWidth = 800;
     const cardHeight = 800;
 
@@ -547,15 +636,15 @@
     longCanvas.height = cardHeight * cardCount;
     const longCtx = longCanvas.getContext('2d');
 
-    // 1. 첫 번째 칸: 표지 렌더링
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
     const tempCtx = tempCanvas.getContext('2d');
     
+    // 1. 표지
     renderCardToContext(tempCtx, 'cover', coverImage, '');
     longCtx.drawImage(tempCanvas, 0, 0);
 
-    // 2. 두 번째 칸부터: 본문 사진 순서대로 렌더링
+    // 2. 본문 사진 순서대로
     photoList.forEach((photoItem, i) => {
       tempCtx.clearRect(0, 0, cardWidth, cardHeight);
       renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge);
@@ -573,22 +662,19 @@
     link.click();
   }
 
-  // 히스토리에 기록 저장
   function saveToHistory(dataUrl, title) {
     historyItems.unshift({
       title: title,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       url: dataUrl
     });
-
-    if (historyItems.length > 8) historyItems.pop(); // 최근 8개 보관
+    if (historyItems.length > 8) historyItems.pop();
     updateHistoryUI();
   }
 
   function updateHistoryUI() {
     const list = document.getElementById('historyList');
     list.innerHTML = '';
-
     historyItems.forEach((item) => {
       const card = document.createElement('div');
       card.className = 'history-card';
@@ -611,7 +697,7 @@
     link.click();
   }
 
-  window.onload = function() { createDefaultImages(); };
+  window.onload = function() { createDefaultSetup(); };
 </script>
 
 </body>
