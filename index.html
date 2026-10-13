@@ -18,18 +18,24 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'SUIT-Regular', sans-serif; }
     body { background-color: #f1f5f9; color: #1e293b; padding: 20px; }
     
-    .app-header { text-align: center; margin-bottom: 20px; }
-    .app-header h1 { font-size: 1.6rem; color: #0f172a; }
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto 20px;
+    }
+    .app-header h1 { font-size: 1.5rem; color: #0f172a; }
 
     .main-layout {
-      max-width: 1400px;
+      max-width: 1100px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 380px 1fr 280px;
+      grid-template-columns: 420px 1fr;
       gap: 20px;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 900px) {
       .main-layout { grid-template-columns: 1fr; }
     }
 
@@ -38,7 +44,7 @@
       padding: 20px;
       border-radius: 16px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-      max-height: 88vh;
+      max-height: 85vh;
       overflow-y: auto;
     }
 
@@ -49,7 +55,7 @@
     }
     .tab-btn.active { background: #2563eb; color: #fff; }
 
-    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
     .form-group { margin-bottom: 10px; }
     label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; color: #475569; }
     
@@ -61,7 +67,7 @@
     .btn-preset { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .flex-row { display: flex; gap: 8px; align-items: center; }
 
-    .preview-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .preview-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; }
     
     canvas {
       width: 100%; max-width: 500px; height: auto; border-radius: 12px;
@@ -72,11 +78,10 @@
       width: 100%; max-width: 500px; padding: 12px; font-size: 0.95rem; font-weight: bold;
       border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
     }
-    .btn-apply { background: #0284c7; color: white; margin-bottom: 4px; }
-    .btn-apply:hover { background: #0369a1; }
+    .btn-apply { background: #0284c7; color: white; }
     .btn-primary { background: #2563eb; color: white; }
     .btn-primary:hover { background: #1d4ed8; }
-    .btn-success { background: #10b981; color: white; margin-top: 2px; }
+    .btn-success { background: #10b981; color: white; }
     .btn-success:hover { background: #059669; }
 
     .btn-add-photo {
@@ -101,26 +106,27 @@
       font-size: 0.72rem; cursor: pointer; font-weight: 600; color: #475569;
     }
     .btn-badge:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .btn-move { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
     .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
-    .btn-del:hover { background: #dc2626; color: white; }
 
-    .history-list { display: flex; flex-direction: column; gap: 12px; }
-    .history-card {
-      background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px;
-      display: flex; flex-direction: column; gap: 6px;
+    /* 히스토리 모달 (팝업창) */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
     }
-    .history-card img { width: 100%; height: auto; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .history-card .info { font-size: 0.75rem; color: #64748b; display: flex; justify-content: space-between; }
-    .history-actions { display: flex; gap: 6px; }
-    .btn-re-download {
-      flex: 1; padding: 5px 8px; background: #3b82f6; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    .btn-hist-del {
-      padding: 5px 8px; background: #ef4444; color: #fff; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer; font-weight: bold;
-    }
-    .btn-clear-all {
-      font-size: 0.75rem; padding: 3px 8px; background: #f1f5f9; color: #ef4444; border: 1px solid #fca5a5; border-radius: 4px; cursor: pointer;
-    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+    .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; font-weight: bold; }
+
+    .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .history-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .history-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; }
+    .history-card .info { font-size: 0.75rem; color: #64748b; }
+    .btn-open-history { padding: 8px 14px; background: #475569; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -129,7 +135,8 @@
 <body>
 
 <div class="app-header">
-  <h1>🏫 학교 홈페이지 게시물 통합 자동 생성기</h1>
+  <h1>🏫 학교 홈페이지 게시물 자동 생성기</h1>
+  <button class="btn-open-history" onclick="toggleModal(true)">📜 작업 기록 보관함 (<span id="histCount">0</span>)</button>
 </div>
 
 <div class="main-layout">
@@ -169,7 +176,7 @@
       <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 편집 (사진 업로드 제거 완료) -->
+    <!-- 탭 1: 표지 편집 -->
     <div id="coverTab" class="tab-content active">
       <h2>📌 표지 텍스트 문구</h2>
       <div class="form-group">
@@ -194,6 +201,7 @@
       </div>
     </div>
 
+    <!-- 탭 2: 본문 사진 관리 -->
     <div id="photoTab" class="tab-content">
       <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
@@ -208,20 +216,19 @@
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
     <button class="btn-action btn-apply" onclick="drawCanvas()">⚡ [미리보기 / 캔버스 적용]</button>
-    <button class="btn-action btn-primary" onclick="downloadCurrent()">💾 현재 화면 개별 저장 (PNG)</button>
-    <button class="btn-action btn-success" onclick="downloadCombinedLongImage()">🚀 [추천] 표지 + 본문사진 '긴 1장 이미지'로 통째 저장</button>
+    <button class="btn-action btn-primary" onclick="downloadCoverOnly()">📌 표지(썸네일)만 따로 저장</button>
+    <button class="btn-action btn-success" onclick="downloadBodyLongImageOnly()">🚀 본문 사진 전체 '긴 1장 이미지'로 저장</button>
   </div>
+</div>
 
-  <div class="panel">
-    <h2>
-      📜 최근 작업 목록
-      <button class="btn-clear-all" onclick="clearAllHistory()">비우기</button>
-    </h2>
-    <div id="historyList" class="history-list">
-      <div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">
-        다운로드한 이미지 내역이<br>여기에 보관됩니다.
-      </div>
+<!-- 히스토리 보관함 팝업 (모달) -->
+<div class="modal-overlay" id="historyModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📜 작업 기록 보관함</h3>
+      <button class="modal-close" onclick="toggleModal(false)">✕</button>
     </div>
+    <div id="historyList" class="history-grid"></div>
   </div>
 </div>
 
@@ -238,7 +245,6 @@
 
   function switchTab(mode) {
     currentMode = mode;
-    
     document.getElementById('btnCoverTab').classList.toggle('active', mode === 'cover');
     document.getElementById('btnPhotoTab').classList.toggle('active', mode === 'photo');
     document.getElementById('coverTab').classList.toggle('active', mode === 'cover');
@@ -279,12 +285,7 @@
         const img = new Image();
         img.onload = () => {
           const newId = Date.now() + Math.random();
-          photoList.push({
-            id: newId,
-            img: img,
-            badge: '',
-            name: file.name
-          });
+          photoList.push({ id: newId, img: img, badge: '', name: file.name });
           selectedPhotoId = newId;
           loadedCount++;
           if (loadedCount === files.length) {
@@ -325,10 +326,12 @@
         <div class="photo-card-header">
           <img src="${item.img.src}" alt="사진">
           <span class="photo-card-title">${idx + 1}. ${item.name}</span>
+          <button class="btn-badge btn-move" onclick="movePhoto(${idx}, -1)">▲ 위로</button>
+          <button class="btn-badge btn-move" onclick="movePhoto(${idx}, 1)">▼ 아래로</button>
           <button class="btn-badge btn-del" onclick="deletePhoto(${item.id})">삭제</button>
         </div>
         <div>
-          <label style="margin-bottom:2px;">학년 라벨 선택 (클릭):</label>
+          <label style="margin-bottom:2px;">학년 라벨 선택:</label>
           <div class="badge-btn-group">
             <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<1학년>')">1학년</button>
             <button class="btn-badge" onclick="setPhotoBadge(${item.id}, '<2학년>')">2학년</button>
@@ -346,6 +349,16 @@
       `;
       container.appendChild(card);
     });
+  }
+
+  function movePhoto(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= photoList.length) return;
+    const temp = photoList[index];
+    photoList[index] = photoList[newIndex];
+    photoList[newIndex] = temp;
+    renderPhotoCardsUI();
+    drawCanvas();
   }
 
   function setPhotoBadge(id, badgeStr) {
@@ -421,7 +434,7 @@
         currentPhoto ? (currentPhoto.badge || '') : ''
       );
     } catch(err) {
-      console.error("렌더링 도중 에러가 발생했으나 안전하게 처리됨:", err);
+      console.error("렌더링 에러:", err);
     }
   }
 
@@ -485,26 +498,15 @@
     }
 
     if (mode === 'cover') {
-      // 📌 표지 전용 레이아웃 (사진 없이 글자 중심의 시원한 구도)
-      const boxX = margin + 50; 
-      const boxY = margin + 110; 
-      const boxW = noteWidth - 100; 
-      const boxH = 200;
-
-      targetCtx.fillStyle = '#ffffff'; 
-      targetCtx.strokeStyle = '#000000'; 
-      targetCtx.lineWidth = 4;
+      const boxX = margin + 50; const boxY = margin + 110; const boxW = noteWidth - 100; const boxH = 200;
+      targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
-      // 소제목
       const subEl = document.getElementById('subTitle');
       const subText = subEl ? subEl.value : '';
-      targetCtx.fillStyle = '#000000'; 
-      targetCtx.font = `bold 32px "${selectedFont}", sans-serif`; 
-      targetCtx.textAlign = 'center';
+      targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 32px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       targetCtx.fillText(subText, width / 2, boxY + 60);
 
-      // 메인제목 & 형광펜
       const mainEl = document.getElementById('mainTitle');
       const mainText = mainEl ? mainEl.value : '';
       const hlEl = document.getElementById('highlightColor');
@@ -519,29 +521,19 @@
       targetCtx.fillStyle = '#000000';
       targetCtx.fillText(mainText, width / 2, boxY + 152);
 
-      // 본문 설명 문구 (여러 줄 지원)
       const bodyEl = document.getElementById('bodyText');
       const bodyText = bodyEl ? bodyEl.value : '';
       const lines = bodyText.split('\n');
-      targetCtx.fillStyle = '#1e293b'; 
-      targetCtx.font = `28px "${selectedFont}", sans-serif`; 
-      targetCtx.textAlign = 'center';
-      
+      targetCtx.fillStyle = '#1e293b'; targetCtx.font = `28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
       let startY = boxY + boxH + 110;
-      lines.forEach((line) => { 
-        targetCtx.fillText(line, width / 2, startY); 
-        startY += 42; 
-      });
+      lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 42; });
 
-      // 해시태그
       const hashEl = document.getElementById('hashTags');
       const hashTags = hashEl ? hashEl.value : '';
-      targetCtx.fillStyle = '#64748b'; 
-      targetCtx.font = `24px "${selectedFont}", sans-serif`;
+      targetCtx.fillStyle = '#64748b'; targetCtx.font = `24px "${selectedFont}", sans-serif`;
       targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 60);
 
     } else {
-      // 📷 본문 사진 전용 레이아웃
       const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
       if (imgObj) {
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
@@ -582,8 +574,7 @@
 
   function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
+    ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
     ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
     ctx.lineTo(x + width, y + height - radius);
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
@@ -592,8 +583,7 @@
     ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
+    if (fill) ctx.fill(); if (stroke) ctx.stroke();
   }
 
   function drawConfettiToCtx(targetCtx, width, height) {
@@ -613,18 +603,34 @@
     });
   }
 
-  function downloadCurrent() {
-    const dataUrl = canvas.toDataURL('image/png');
+  // 📌 1. 표지 단독 다운로드
+  function downloadCoverOnly() {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 800; tempCanvas.height = 800;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    renderCardToContext(tempCtx, 'cover', null, '');
+
+    const dataUrl = tempCanvas.toDataURL('image/png');
     const mainEl = document.getElementById('mainTitle');
-    const title = mainEl ? mainEl.value : '개별이미지';
-    saveToHistory(dataUrl, `[개별] ${title}`);
+    const title = mainEl ? mainEl.value : '표지';
     
+    saveToHistory(dataUrl, `[표지] ${title}`);
+
     const link = document.createElement('a');
-    link.download = `${title}_개별.png`; link.href = dataUrl; link.click();
+    link.download = `[표지]_${title}.png`;
+    link.href = dataUrl;
+    link.click();
   }
 
-  function downloadCombinedLongImage() {
-    const cardCount = 1 + photoList.length;
+  // 🚀 2. 본문 사진들만 세로로 연속 연결하여 다운로드 (표지 제외)
+  function downloadBodyLongImageOnly() {
+    if (photoList.length === 0) {
+      alert('본문 사진이 없습니다. 본문 사진을 추가해 주세요!');
+      return;
+    }
+
+    const cardCount = photoList.length;
     const cardWidth = 800;
     const cardHeight = 800;
 
@@ -636,26 +642,28 @@
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
     const tempCtx = tempCanvas.getContext('2d');
-    
-    renderCardToContext(tempCtx, 'cover', null, '');
-    longCtx.drawImage(tempCanvas, 0, 0);
 
     photoList.forEach((photoItem, i) => {
       tempCtx.clearRect(0, 0, cardWidth, cardHeight);
       renderCardToContext(tempCtx, 'photo', photoItem.img, photoItem.badge || '');
-      longCtx.drawImage(tempCanvas, 0, (i + 1) * cardHeight);
+      longCtx.drawImage(tempCanvas, 0, i * cardHeight);
     });
 
     const dataUrl = longCanvas.toDataURL('image/png');
     const mainEl = document.getElementById('mainTitle');
-    const title = mainEl ? mainEl.value : '통합게시물';
+    const title = mainEl ? mainEl.value : '본문연결';
     
-    saveToHistory(dataUrl, `[통합] ${title} (총 ${cardCount}장)`);
+    saveToHistory(dataUrl, `[본문통합] ${title} (${cardCount}장)`);
 
     const link = document.createElement('a');
-    link.download = `${title}_전체통합.png`;
+    link.download = `[본문연결]_${title}.png`;
     link.href = dataUrl;
     link.click();
+  }
+
+  // 히스토리 모달 열기/닫기
+  function toggleModal(show) {
+    document.getElementById('historyModal').classList.toggle('active', show);
   }
 
   function saveToHistory(dataUrl, title) {
@@ -665,7 +673,8 @@
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       url: dataUrl
     });
-    if (historyItems.length > 10) historyItems.pop();
+    if (historyItems.length > 20) historyItems.pop();
+    document.getElementById('histCount').innerText = historyItems.length;
     updateHistoryUI();
   }
 
@@ -675,7 +684,7 @@
     list.innerHTML = '';
 
     if (historyItems.length === 0) {
-      list.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">다운로드한 이미지 내역이<br>여기에 보관됩니다.</div>';
+      list.innerHTML = '<div style="grid-column: 1/-1; font-size:0.85rem; color:#94a3b8; text-align:center; padding: 30px 0;">작업 내역이 없습니다.</div>';
       return;
     }
 
@@ -683,30 +692,15 @@
       const card = document.createElement('div');
       card.className = 'history-card';
       card.innerHTML = `
-        <img src="${item.url}" alt="작업이력">
+        <img src="${item.url}" alt="이력">
         <div class="info">
-          <span><b>${item.title}</b></span>
-          <span>${item.time}</span>
+          <div><b>${item.title}</b></div>
+          <div>${item.time}</div>
         </div>
-        <div class="history-actions">
-          <button class="btn-re-download" onclick="reDownload('${item.url}', '${item.title}')">다시 다운로드</button>
-          <button class="btn-hist-del" onclick="deleteHistoryItem(${item.id})">삭제</button>
-        </div>
+        <button class="btn-badge" onclick="reDownload('${item.url}', '${item.title}')">다운로드</button>
       `;
       list.appendChild(card);
     });
-  }
-
-  function deleteHistoryItem(id) {
-    historyItems = historyItems.filter(h => h.id !== id);
-    updateHistoryUI();
-  }
-
-  function clearAllHistory() {
-    if (confirm('최근 작업 목록을 모두 비우시겠습니까?')) {
-      historyItems = [];
-      updateHistoryUI();
-    }
   }
 
   function reDownload(url, title) {
