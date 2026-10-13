@@ -169,9 +169,9 @@
       <input type="file" id="fontFileInput" accept=".ttf, .otf, .woff" onchange="loadCustomFont(event)" style="margin-top:4px; font-size:0.7rem;">
     </div>
 
-    <!-- 탭 1: 표지 편집 -->
+    <!-- 탭 1: 표지 편집 (사진 업로드 제거 완료) -->
     <div id="coverTab" class="tab-content active">
-      <h2>📌 표지 문구 및 사진</h2>
+      <h2>📌 표지 텍스트 문구</h2>
       <div class="form-group">
         <label>상단 소제목</label>
         <input type="text" id="subTitle" value="10월의 샛별" oninput="drawCanvas()">
@@ -186,15 +186,11 @@
       </div>
       <div class="form-group">
         <label>본문 설명 문구 (엔터 가능)</label>
-        <textarea id="bodyText" rows="2" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
+        <textarea id="bodyText" rows="3" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
       </div>
       <div class="form-group">
         <label>하단 해시태그</label>
         <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" oninput="drawCanvas()">
-      </div>
-      <div class="form-group">
-        <label>표지용 사진 선택 (선택 사항)</label>
-        <input type="file" id="coverImageInput" accept="image/*" onchange="loadCoverImage(event)">
       </div>
     </div>
 
@@ -234,7 +230,6 @@
   const ctx = canvas.getContext('2d');
   
   let currentMode = 'cover';
-  let coverImage = null;
   let customFontName = null;
 
   let photoList = [];
@@ -265,7 +260,6 @@
     const img = new Image();
     img.src = dCanvas.toDataURL();
     img.onload = () => {
-      coverImage = img;
       const initialId = Date.now();
       photoList = [{ id: initialId, img: img, badge: '<1학년>', name: '운동회_사진1.jpg' }];
       selectedPhotoId = initialId;
@@ -417,25 +411,13 @@
     drawCanvas();
   }
 
-  function loadCoverImage(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => { coverImage = img; drawCanvas(); };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
   function drawCanvas() {
     try {
       const currentPhoto = photoList.find(p => p.id === selectedPhotoId);
       renderCardToContext(
         ctx, 
         currentMode, 
-        currentMode === 'cover' ? coverImage : (currentPhoto ? currentPhoto.img : null), 
+        currentPhoto ? currentPhoto.img : null, 
         currentPhoto ? (currentPhoto.badge || '') : ''
       );
     } catch(err) {
@@ -503,44 +485,63 @@
     }
 
     if (mode === 'cover') {
-      const boxX = margin + 40; const boxY = margin + 70; const boxW = noteWidth - 80; const boxH = 150;
-      targetCtx.fillStyle = '#ffffff'; targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4;
+      // 📌 표지 전용 레이아웃 (사진 없이 글자 중심의 시원한 구도)
+      const boxX = margin + 50; 
+      const boxY = margin + 110; 
+      const boxW = noteWidth - 100; 
+      const boxH = 200;
+
+      targetCtx.fillStyle = '#ffffff'; 
+      targetCtx.strokeStyle = '#000000'; 
+      targetCtx.lineWidth = 4;
       roundRect(targetCtx, boxX, boxY, boxW, boxH, 20, true, true);
 
+      // 소제목
       const subEl = document.getElementById('subTitle');
       const subText = subEl ? subEl.value : '';
-      targetCtx.fillStyle = '#000000'; targetCtx.font = `bold 28px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
-      targetCtx.fillText(subText, width / 2, boxY + 45);
+      targetCtx.fillStyle = '#000000'; 
+      targetCtx.font = `bold 32px "${selectedFont}", sans-serif`; 
+      targetCtx.textAlign = 'center';
+      targetCtx.fillText(subText, width / 2, boxY + 60);
 
+      // 메인제목 & 형광펜
       const mainEl = document.getElementById('mainTitle');
       const mainText = mainEl ? mainEl.value : '';
       const hlEl = document.getElementById('highlightColor');
       const hlColor = hlEl ? hlEl.value : '#ffdc34';
 
-      targetCtx.font = `bold 54px "${selectedFont}", sans-serif`;
+      targetCtx.font = `bold 64px "${selectedFont}", sans-serif`;
       const textWidth = targetCtx.measureText(mainText).width;
 
       targetCtx.fillStyle = hlColor;
-      targetCtx.fillRect((width / 2) - (textWidth / 2) - 10, boxY + 112, textWidth + 20, 18);
+      targetCtx.fillRect((width / 2) - (textWidth / 2) - 12, boxY + 140, textWidth + 24, 22);
 
       targetCtx.fillStyle = '#000000';
-      targetCtx.fillText(mainText, width / 2, boxY + 120);
+      targetCtx.fillText(mainText, width / 2, boxY + 152);
 
-      const imgX = margin + 40; const imgY = boxY + boxH + 30; const imgW = noteWidth - 80; const imgH = 310;
-      if (imgObj) drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
-
+      // 본문 설명 문구 (여러 줄 지원)
       const bodyEl = document.getElementById('bodyText');
       const bodyText = bodyEl ? bodyEl.value : '';
       const lines = bodyText.split('\n');
-      targetCtx.fillStyle = '#1e293b'; targetCtx.font = `24px "${selectedFont}", sans-serif`; targetCtx.textAlign = 'center';
-      let startY = imgY + imgH + 50;
-      lines.forEach((line) => { targetCtx.fillText(line, width / 2, startY); startY += 34; });
+      targetCtx.fillStyle = '#1e293b'; 
+      targetCtx.font = `28px "${selectedFont}", sans-serif`; 
+      targetCtx.textAlign = 'center';
+      
+      let startY = boxY + boxH + 110;
+      lines.forEach((line) => { 
+        targetCtx.fillText(line, width / 2, startY); 
+        startY += 42; 
+      });
 
+      // 해시태그
       const hashEl = document.getElementById('hashTags');
       const hashTags = hashEl ? hashEl.value : '';
-      targetCtx.fillStyle = '#64748b'; targetCtx.font = `20px "${selectedFont}", sans-serif`;
-      targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 35);
+      targetCtx.fillStyle = '#64748b'; 
+      targetCtx.font = `24px "${selectedFont}", sans-serif`;
+      targetCtx.fillText(hashTags, width / 2, margin + noteHeight - 60);
+
     } else {
+      // 📷 본문 사진 전용 레이아웃
       const imgX = margin + 30; const imgY = margin + 70; const imgW = noteWidth - 60; const imgH = noteHeight - 100;
       if (imgObj) {
         drawClippedImageToCtx(targetCtx, imgObj, imgX, imgY, imgW, imgH);
@@ -579,7 +580,6 @@
     targetCtx.strokeStyle = '#000000'; targetCtx.lineWidth = 4; targetCtx.strokeRect(x, y, w, h);
   }
 
-  // 둥근 사각형 그리기 도우미 (오타 quadraticCurveTo 로 정밀 수정 완료)
   function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -637,7 +637,7 @@
     tempCanvas.width = cardWidth; tempCanvas.height = cardHeight;
     const tempCtx = tempCanvas.getContext('2d');
     
-    renderCardToContext(tempCtx, 'cover', coverImage, '');
+    renderCardToContext(tempCtx, 'cover', null, '');
     longCtx.drawImage(tempCanvas, 0, 0);
 
     photoList.forEach((photoItem, i) => {
