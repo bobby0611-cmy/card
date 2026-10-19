@@ -23,9 +23,13 @@
       justify-content: space-between;
       align-items: center;
       max-width: 1100px;
-      margin: 0 auto 20px;
+      margin: 0 auto 16px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
     .app-header h1 { font-size: 1.5rem; color: #0f172a; }
+
+    .header-btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .main-layout {
       max-width: 1100px;
@@ -89,7 +93,17 @@
     .btn-success { background: #10b981; color: white; }
     .btn-success:hover { background: #059669; }
 
-    /* 드래그 앤 드롭 패널 구역 스타일 */
+    .btn-header {
+      padding: 8px 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.82rem; transition: background 0.2s;
+    }
+    .btn-save-draft { background: #8b5cf6; color: white; }
+    .btn-save-draft:hover { background: #7c3aed; }
+    .btn-load-draft { background: #06b6d4; color: white; }
+    .btn-load-draft:hover { background: #0891b2; }
+    .btn-export-file { background: #f59e0b; color: white; }
+    .btn-export-file:hover { background: #d97706; }
+    .btn-history { background: #475569; color: white; }
+
     .drop-zone {
       border: 2px dashed #3b82f6;
       background: #eff6ff;
@@ -100,16 +114,8 @@
       margin-bottom: 12px;
       transition: all 0.2s;
     }
-    .drop-zone.dragover {
-      background: #dbeafe;
-      border-color: #1d4ed8;
-      transform: scale(1.02);
-    }
-    .drop-zone-text {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #2563eb;
-    }
+    .drop-zone.dragover { background: #dbeafe; border-color: #1d4ed8; transform: scale(1.02); }
+    .drop-zone-text { font-size: 0.85rem; font-weight: bold; color: #2563eb; }
 
     .photo-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
     .photo-card {
@@ -130,7 +136,6 @@
     .btn-move { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
     .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
 
-    /* 전체 화면 드래그 안내 오버레이 */
     .global-drag-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(37, 99, 235, 0.85); z-index: 2000;
@@ -139,7 +144,6 @@
     }
     .global-drag-overlay.active { display: flex; }
 
-    /* 히스토리 모달 (팝업창) */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
@@ -156,7 +160,6 @@
     .history-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
     .history-card img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; }
     .history-card .info { font-size: 0.75rem; color: #64748b; }
-    .btn-open-history { padding: 8px 14px; background: #475569; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -164,15 +167,22 @@
 </head>
 <body>
 
-<!-- 전체 화면 드래그 오버레이 -->
 <div class="global-drag-overlay" id="dragOverlay">
   📷 사진을 여기에 놓으시면 추가됩니다!
 </div>
 
 <div class="app-header">
   <h1>🏫 학교 홈페이지 게시물 자동 생성기</h1>
-  <button class="btn-open-history" onclick="toggleModal(true)">📜 작업 기록 보관함 (<span id="histCount">0</span>)</button>
+  <div class="header-btn-group">
+    <button class="btn-header btn-save-draft" onclick="saveProjectToLocal(true)">💾 임시 저장하기</button>
+    <button class="btn-header btn-load-draft" onclick="loadProjectFromLocal(true)">📂 저장된 작업 불러오기</button>
+    <button class="btn-header btn-export-file" onclick="exportProjectFile()">📁 파일로 저장/불러오기</button>
+    <button class="btn-header btn-history" onclick="toggleModal(true)">📜 기록 보관함 (<span id="histCount">0</span>)</button>
+  </div>
 </div>
+
+<!-- 파일 불러오기용 숨겨진 input -->
+<input type="file" id="projectFileInput" accept=".json" style="display:none;" onchange="importProjectFile(event)">
 
 <div class="main-layout">
   <div class="panel">
@@ -193,17 +203,17 @@
     
     <div class="form-group flex-row">
       <label style="margin:0;">배경:</label>
-      <select id="bgType" onchange="drawCanvas()" style="width: 100px;">
+      <select id="bgType" onchange="autoSaveAndDraw()" style="width: 100px;">
         <option value="gradient">그라데이션</option>
         <option value="solid">단색</option>
       </select>
-      <input type="color" id="bgColor1" value="#ff9a9e" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
-      <input type="color" id="bgColor2" value="#fecfef" onchange="drawCanvas()" style="width:30px; height:26px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor1" value="#ff9a9e" onchange="autoSaveAndDraw()" style="width:30px; height:26px; border:none; cursor:pointer;">
+      <input type="color" id="bgColor2" value="#fecfef" onchange="autoSaveAndDraw()" style="width:30px; height:26px; border:none; cursor:pointer;">
     </div>
 
     <div class="form-group">
       <label>폰트 선택 / 파일 업로드</label>
-      <select id="fontSelect" onchange="drawCanvas()">
+      <select id="fontSelect" onchange="autoSaveAndDraw()">
         <option value="sans-serif">기본 고딕 (가장 안정적)</option>
         <option value="GmarketSansBold">지마켓 산스 (강조용)</option>
         <option value="OTWelcomeRA">웰컴체 (귀여움)</option>
@@ -216,27 +226,27 @@
       <h2>📌 표지 텍스트 문구</h2>
       <div class="form-group">
         <label>상단 소제목</label>
-        <input type="text" id="subTitle" value="10월의 샛별" oninput="updateFileNameDefault(); drawCanvas();">
+        <input type="text" id="subTitle" value="10월의 샛별" oninput="updateFileNameDefault(); autoSaveAndDraw();">
       </div>
       <div class="form-group">
         <label>메인 제목</label>
-        <input type="text" id="mainTitle" value="가을 운동회" oninput="updateFileNameDefault(); drawCanvas();">
+        <input type="text" id="mainTitle" value="가을 운동회" oninput="updateFileNameDefault(); autoSaveAndDraw();">
       </div>
       <div class="form-group">
         <label>형광펜 하이라이트 색상</label>
-        <input type="color" id="highlightColor" value="#ffdc34" onchange="drawCanvas()" style="width:100%; height:26px; border:none; cursor:pointer;">
+        <input type="color" id="highlightColor" value="#ffdc34" onchange="autoSaveAndDraw()" style="width:100%; height:26px; border:none; cursor:pointer;">
       </div>
       <div class="form-group">
         <label>본문 설명 문구 (엔터 가능)</label>
-        <textarea id="bodyText" rows="3" oninput="drawCanvas()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
+        <textarea id="bodyText" rows="3" oninput="autoSaveAndDraw()">청팀 백팀 모두가 하나 되는 즐거운 가을 운동회 현장!</textarea>
       </div>
       <div class="form-group">
         <label>하단 해시태그</label>
-        <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" oninput="drawCanvas()">
+        <input type="text" id="hashTags" value="#샛별초등학교 #가을운동회" oninput="autoSaveAndDraw()">
       </div>
     </div>
 
-    <!-- 탭 2: 본문 사진 관리 (드래그 앤 드롭 영역 포함) -->
+    <!-- 탭 2: 본문 사진 관리 -->
     <div id="photoTab" class="tab-content">
       <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
@@ -252,7 +262,6 @@
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
-    <!-- 파일 저장 이름 설정 박스 -->
     <div class="save-setting-box">
       <label>💾 저장 파일 이름 설정 (가나다 순 정렬용)</label>
       <input type="text" id="customFileName" value="가을운동회" placeholder="파일 이름 입력">
@@ -267,7 +276,6 @@
   </div>
 </div>
 
-<!-- 히스토리 보관함 팝업 (모달) -->
 <div class="modal-overlay" id="historyModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -296,6 +304,11 @@
     }
   }
 
+  function autoSaveAndDraw() {
+    drawCanvas();
+    saveProjectToLocal(false); // 자동 임시저장
+  }
+
   function switchTab(mode) {
     currentMode = mode;
     document.getElementById('btnCoverTab').classList.toggle('active', mode === 'cover');
@@ -320,18 +333,140 @@
     img.src = dCanvas.toDataURL();
     img.onload = () => {
       const initialId = Date.now();
-      photoList = [{ id: initialId, img: img, badge: '<1학년>', name: '운동회_사진1.jpg' }];
+      photoList = [{ id: initialId, img: img, badge: '<1학년>', name: '운동회_사진1.jpg', dataUrl: dCanvas.toDataURL() }];
       selectedPhotoId = initialId;
       renderPhotoCardsUI();
       drawCanvas();
     };
   }
 
-  // 드래그 앤 드롭 및 파일 선택 통합 사진 추가 처리 함수
+  // === 💾 프로젝트 저장 및 불러오기 기능 구현 ===
+  function getProjectData() {
+    return {
+      subTitle: document.getElementById('subTitle').value,
+      mainTitle: document.getElementById('mainTitle').value,
+      highlightColor: document.getElementById('highlightColor').value,
+      bodyText: document.getElementById('bodyText').value,
+      hashTags: document.getElementById('hashTags').value,
+      bgType: document.getElementById('bgType').value,
+      bgColor1: document.getElementById('bgColor1').value,
+      bgColor2: document.getElementById('bgColor2').value,
+      fontSelect: document.getElementById('fontSelect').value,
+      customFileName: document.getElementById('customFileName').value,
+      photos: photoList.map(p => ({
+        id: p.id,
+        badge: p.badge,
+        name: p.name,
+        dataUrl: p.dataUrl || p.img.src
+      }))
+    };
+  }
+
+  function saveProjectToLocal(showAlert = false) {
+    try {
+      const data = getProjectData();
+      localStorage.setItem('school_card_project_draft', JSON.stringify(data));
+      if (showAlert) alert('💾 현재 작업 상태가 브라우저에 성공적으로 임시저장되었습니다!');
+    } catch (e) {
+      if (showAlert) alert('용량이 너무 커서 저장에 실패했습니다. 고해상도 사진 수를 조금 줄여주세요.');
+    }
+  }
+
+  function loadProjectFromLocal(showAlert = false) {
+    const raw = localStorage.getItem('school_card_project_draft');
+    if (!raw) {
+      if (showAlert) alert('저장된 작업 데이터가 없습니다.');
+      return;
+    }
+    try {
+      const data = JSON.parse(raw);
+      applyProjectData(data, () => {
+        if (showAlert) alert('📂 저장되어 있던 작업을 불러왔습니다!');
+      });
+    } catch (e) {
+      if (showAlert) alert('저장 데이터를 불러오는 데 실패했습니다.');
+    }
+  }
+
+  function applyProjectData(data, callback) {
+    if (data.subTitle !== undefined) document.getElementById('subTitle').value = data.subTitle;
+    if (data.mainTitle !== undefined) document.getElementById('mainTitle').value = data.mainTitle;
+    if (data.highlightColor !== undefined) document.getElementById('highlightColor').value = data.highlightColor;
+    if (data.bodyText !== undefined) document.getElementById('bodyText').value = data.bodyText;
+    if (data.hashTags !== undefined) document.getElementById('hashTags').value = data.hashTags;
+    if (data.bgType !== undefined) document.getElementById('bgType').value = data.bgType;
+    if (data.bgColor1 !== undefined) document.getElementById('bgColor1').value = data.bgColor1;
+    if (data.bgColor2 !== undefined) document.getElementById('bgColor2').value = data.bgColor2;
+    if (data.fontSelect !== undefined) document.getElementById('fontSelect').value = data.fontSelect;
+    if (data.customFileName !== undefined) document.getElementById('customFileName').value = data.customFileName;
+
+    if (data.photos && data.photos.length > 0) {
+      let loaded = 0;
+      const newPhotoList = [];
+      data.photos.forEach((p) => {
+        const img = new Image();
+        img.onload = () => {
+          newPhotoList.push({
+            id: p.id,
+            badge: p.badge,
+            name: p.name,
+            img: img,
+            dataUrl: p.dataUrl
+          });
+          loaded++;
+          if (loaded === data.photos.length) {
+            photoList = newPhotoList;
+            selectedPhotoId = photoList[0] ? photoList[0].id : null;
+            renderPhotoCardsUI();
+            drawCanvas();
+            if (callback) callback();
+          }
+        };
+        img.src = p.dataUrl;
+      });
+    } else {
+      photoList = [];
+      selectedPhotoId = null;
+      renderPhotoCardsUI();
+      drawCanvas();
+      if (callback) callback();
+    }
+  }
+
+  function exportProjectFile() {
+    const choice = confirm('작업 내용을 백업 파일(.json)로 저장하시겠습니까?\n[확인] - 파일 저장하기\n[취소] - 백업 파일 불러오기');
+    if (choice) {
+      const data = getProjectData();
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `학교게시물_작업백업_${document.getElementById('customFileName').value || '임시'}.json`;
+      a.click();
+    } else {
+      document.getElementById('projectFileInput').click();
+    }
+  }
+
+  function importProjectFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        applyProjectData(data, () => {
+          alert('📁 백업 파일에서 작업을 불러왔습니다!');
+        });
+      } catch (err) {
+        alert('올바른 백업 파일(.json)이 아닙니다.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
+
   function processPhotoFiles(files) {
     if (!files || !files.length) return;
-    
-    // 사진이 업로드되면 자동으로 본문 탭으로 전환
     switchTab('photo');
 
     let loadedCount = 0;
@@ -345,12 +480,12 @@
         const img = new Image();
         img.onload = () => {
           const newId = Date.now() + Math.random();
-          photoList.push({ id: newId, img: img, badge: '', name: file.name });
+          photoList.push({ id: newId, img: img, badge: '', name: file.name, dataUrl: event.target.result });
           selectedPhotoId = newId;
           loadedCount++;
           if (loadedCount === imageFiles.length) {
             renderPhotoCardsUI();
-            drawCanvas();
+            autoSaveAndDraw();
           }
         };
         img.src = event.target.result;
@@ -364,7 +499,6 @@
     e.target.value = '';
   }
 
-  // 드래그 앤 드롭 이벤트 등록
   function initDragAndDrop() {
     const overlay = document.getElementById('dragOverlay');
 
@@ -446,7 +580,7 @@
     photoList[index] = photoList[newIndex];
     photoList[newIndex] = temp;
     renderPhotoCardsUI();
-    drawCanvas();
+    autoSaveAndDraw();
   }
 
   function setPhotoBadge(id, badgeStr) {
@@ -455,7 +589,7 @@
       target.badge = badgeStr;
       selectedPhotoId = id;
       renderPhotoCardsUI();
-      drawCanvas();
+      autoSaveAndDraw();
     }
   }
 
@@ -463,7 +597,7 @@
     const target = photoList.find(p => p.id === id);
     if (target) {
       target.badge = val;
-      drawCanvas();
+      autoSaveAndDraw();
     }
   }
 
@@ -473,7 +607,7 @@
       selectedPhotoId = photoList.length ? photoList[0].id : null;
     }
     renderPhotoCardsUI();
-    drawCanvas();
+    autoSaveAndDraw();
   }
 
   function loadCustomFont(event) {
@@ -509,7 +643,7 @@
     else if(type === 'peach') { bg1.value = '#ff9a9e'; bg2.value = '#fecfef'; }
     else if(type === 'purple') { bg1.value = '#667eea'; bg2.value = '#764ba2'; }
     else if(type === 'white') { bgType.value = 'solid'; bg1.value = '#ffffff'; }
-    drawCanvas();
+    autoSaveAndDraw();
   }
 
   function drawCanvas() {
@@ -803,6 +937,15 @@
     createDefaultSetup();
     updateFileNameDefault();
     initDragAndDrop();
+    
+    // 이전 자동 임시저장 내역이 있으면 자동으로 안내 후 로드
+    setTimeout(() => {
+      if (localStorage.getItem('school_card_project_draft')) {
+        if (confirm('이전에 저장되어 있던 작업 내용이 있습니다. 불러오시겠습니까?')) {
+          loadProjectFromLocal(false);
+        }
+      }
+    }, 500);
   };
 </script>
 
