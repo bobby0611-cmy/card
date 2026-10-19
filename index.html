@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>학교 홈페이지 게시물 통합 자동 생성기</title>
+  <title>학교 홈페이지 게시물 자동 생성기</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SUIT-Regular.css">
   <style>
     @font-face {
@@ -16,7 +16,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'SUIT-Regular', sans-serif; }
-    body { background-color: #f1f5f9; color: #1e293b; padding: 20px; }
+    body { background-color: #f1f5f9; color: #1e293b; padding: 20px; position: relative; }
     
     .app-header {
       display: flex;
@@ -74,6 +74,11 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.12); background: #fff;
     }
 
+    .save-setting-box {
+      width: 100%; max-width: 500px; background: #f8fafc; border: 1px solid #cbd5e1;
+      padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px;
+    }
+
     .btn-action {
       width: 100%; max-width: 500px; padding: 12px; font-size: 0.95rem; font-weight: bold;
       border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;
@@ -84,11 +89,27 @@
     .btn-success { background: #10b981; color: white; }
     .btn-success:hover { background: #059669; }
 
-    .btn-add-photo {
-      width: 100%; padding: 10px; background: #3b82f6; color: white; border: none;
-      border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem; margin-bottom: 12px;
+    /* 드래그 앤 드롭 패널 구역 스타일 */
+    .drop-zone {
+      border: 2px dashed #3b82f6;
+      background: #eff6ff;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.2s;
     }
-    .btn-add-photo:hover { background: #2563eb; }
+    .drop-zone.dragover {
+      background: #dbeafe;
+      border-color: #1d4ed8;
+      transform: scale(1.02);
+    }
+    .drop-zone-text {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #2563eb;
+    }
 
     .photo-card-list { display: flex; flex-direction: column; gap: 10px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
     .photo-card {
@@ -108,6 +129,15 @@
     .btn-badge:hover { background: #3b82f6; color: white; border-color: #3b82f6; }
     .btn-move { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
     .btn-del { background: #fee2e2; color: #dc2626; border-color: #fca5a5; margin-left: auto; }
+
+    /* 전체 화면 드래그 안내 오버레이 */
+    .global-drag-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(37, 99, 235, 0.85); z-index: 2000;
+      justify-content: center; align-items: center; color: white; font-size: 1.8rem; font-weight: bold;
+      pointer-events: none;
+    }
+    .global-drag-overlay.active { display: flex; }
 
     /* 히스토리 모달 (팝업창) */
     .modal-overlay {
@@ -133,6 +163,11 @@
   </style>
 </head>
 <body>
+
+<!-- 전체 화면 드래그 오버레이 -->
+<div class="global-drag-overlay" id="dragOverlay">
+  📷 사진을 여기에 놓으시면 추가됩니다!
+</div>
 
 <div class="app-header">
   <h1>🏫 학교 홈페이지 게시물 자동 생성기</h1>
@@ -181,11 +216,11 @@
       <h2>📌 표지 텍스트 문구</h2>
       <div class="form-group">
         <label>상단 소제목</label>
-        <input type="text" id="subTitle" value="10월의 샛별" oninput="drawCanvas()">
+        <input type="text" id="subTitle" value="10월의 샛별" oninput="updateFileNameDefault(); drawCanvas();">
       </div>
       <div class="form-group">
         <label>메인 제목</label>
-        <input type="text" id="mainTitle" value="가을 운동회" oninput="drawCanvas()">
+        <input type="text" id="mainTitle" value="가을 운동회" oninput="updateFileNameDefault(); drawCanvas();">
       </div>
       <div class="form-group">
         <label>형광펜 하이라이트 색상</label>
@@ -201,11 +236,13 @@
       </div>
     </div>
 
-    <!-- 탭 2: 본문 사진 관리 -->
+    <!-- 탭 2: 본문 사진 관리 (드래그 앤 드롭 영역 포함) -->
     <div id="photoTab" class="tab-content">
       <h2>📷 본문 사진 목록 및 학년 표시</h2>
       
-      <button class="btn-add-photo" onclick="document.getElementById('photoFileInput').click()">➕ 사진 추가하기 (클릭)</button>
+      <div class="drop-zone" onclick="document.getElementById('photoFileInput').click()">
+        <div class="drop-zone-text">➕ 클릭하여 사진을 추가하거나<br>여기로 사진을 끌어다 놓으세요 (Drag & Drop)</div>
+      </div>
       <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;" onchange="handleAddPhotos(event)">
 
       <div id="photoCardList" class="photo-card-list"></div>
@@ -215,9 +252,18 @@
   <div class="panel preview-panel">
     <canvas id="thumbnailCanvas" width="800" height="800"></canvas>
 
+    <!-- 파일 저장 이름 설정 박스 -->
+    <div class="save-setting-box">
+      <label>💾 저장 파일 이름 설정 (가나다 순 정렬용)</label>
+      <input type="text" id="customFileName" value="가을운동회" placeholder="파일 이름 입력">
+      <span style="font-size:0.75rem; color:#64748b;">
+        * 저장 시 표지는 <b>00_</b>, 본문은 <b>01_</b>이 자동으로 앞에 붙어 정렬됩니다.
+      </span>
+    </div>
+
     <button class="btn-action btn-apply" onclick="drawCanvas()">⚡ [미리보기 / 캔버스 적용]</button>
-    <button class="btn-action btn-primary" onclick="downloadCoverOnly()">📌 표지(썸네일)만 따로 저장</button>
-    <button class="btn-action btn-success" onclick="downloadBodyLongImageOnly()">🚀 본문 사진 전체 '긴 1장 이미지'로 저장</button>
+    <button class="btn-action btn-primary" onclick="downloadCoverOnly()">📌 표지(00_표지)만 저장</button>
+    <button class="btn-action btn-success" onclick="downloadBodyLongImageOnly()">🚀 본문 사진(01_본문) '긴 이미지' 저장</button>
   </div>
 </div>
 
@@ -242,6 +288,13 @@
   let photoList = [];
   let selectedPhotoId = null;
   let historyItems = [];
+
+  function updateFileNameDefault() {
+    const mainTitleVal = document.getElementById('mainTitle').value.trim();
+    if (mainTitleVal) {
+      document.getElementById('customFileName').value = mainTitleVal.replace(/[^a-zA-Z0-9가-힣]/g, '_');
+    }
+  }
 
   function switchTab(mode) {
     currentMode = mode;
@@ -274,12 +327,19 @@
     };
   }
 
-  function handleAddPhotos(e) {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+  // 드래그 앤 드롭 및 파일 선택 통합 사진 추가 처리 함수
+  function processPhotoFiles(files) {
+    if (!files || !files.length) return;
+    
+    // 사진이 업로드되면 자동으로 본문 탭으로 전환
+    switchTab('photo');
 
     let loadedCount = 0;
-    files.forEach((file) => {
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) return;
+
+    imageFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
@@ -288,7 +348,7 @@
           photoList.push({ id: newId, img: img, badge: '', name: file.name });
           selectedPhotoId = newId;
           loadedCount++;
-          if (loadedCount === files.length) {
+          if (loadedCount === imageFiles.length) {
             renderPhotoCardsUI();
             drawCanvas();
           }
@@ -297,7 +357,35 @@
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  function handleAddPhotos(e) {
+    processPhotoFiles(e.target.files);
     e.target.value = '';
+  }
+
+  // 드래그 앤 드롭 이벤트 등록
+  function initDragAndDrop() {
+    const overlay = document.getElementById('dragOverlay');
+
+    window.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      overlay.classList.add('active');
+    });
+
+    window.addEventListener('dragleave', (e) => {
+      if (e.clientX <= 0 || e.clientY <= 0) {
+        overlay.classList.remove('active');
+      }
+    });
+
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      overlay.classList.remove('active');
+      if (e.dataTransfer && e.dataTransfer.files) {
+        processPhotoFiles(e.dataTransfer.files);
+      }
+    });
   }
 
   function renderPhotoCardsUI() {
@@ -306,7 +394,7 @@
     container.innerHTML = '';
 
     if (photoList.length === 0) {
-      container.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">사진이 없습니다.<br>위 버튼을 눌러 사진을 추가하세요!</div>';
+      container.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8; text-align:center; padding: 20px 0;">사진이 없습니다.<br>위 영역으로 사진을 끌어다 놓으세요!</div>';
       return;
     }
 
@@ -603,7 +691,12 @@
     });
   }
 
-  // 📌 1. 표지 단독 다운로드
+  function getSaveFileName(typePrefix, defaultLabel) {
+    const customName = document.getElementById('customFileName').value.trim();
+    const baseName = customName || defaultLabel;
+    return `${typePrefix}_${baseName}.png`;
+  }
+
   function downloadCoverOnly() {
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = 800; tempCanvas.height = 800;
@@ -612,18 +705,16 @@
     renderCardToContext(tempCtx, 'cover', null, '');
 
     const dataUrl = tempCanvas.toDataURL('image/png');
-    const mainEl = document.getElementById('mainTitle');
-    const title = mainEl ? mainEl.value : '표지';
+    const fileName = getSaveFileName('00_[표지]', '새게시물');
     
-    saveToHistory(dataUrl, `[표지] ${title}`);
+    saveToHistory(dataUrl, fileName);
 
     const link = document.createElement('a');
-    link.download = `[표지]_${title}.png`;
+    link.download = fileName;
     link.href = dataUrl;
     link.click();
   }
 
-  // 🚀 2. 본문 사진들만 세로로 연속 연결하여 다운로드 (표지 제외)
   function downloadBodyLongImageOnly() {
     if (photoList.length === 0) {
       alert('본문 사진이 없습니다. 본문 사진을 추가해 주세요!');
@@ -650,18 +741,16 @@
     });
 
     const dataUrl = longCanvas.toDataURL('image/png');
-    const mainEl = document.getElementById('mainTitle');
-    const title = mainEl ? mainEl.value : '본문연결';
+    const fileName = getSaveFileName('01_[본문]', '새게시물');
     
-    saveToHistory(dataUrl, `[본문통합] ${title} (${cardCount}장)`);
+    saveToHistory(dataUrl, fileName);
 
     const link = document.createElement('a');
-    link.download = `[본문연결]_${title}.png`;
+    link.download = fileName;
     link.href = dataUrl;
     link.click();
   }
 
-  // 히스토리 모달 열기/닫기
   function toggleModal(show) {
     document.getElementById('historyModal').classList.toggle('active', show);
   }
@@ -705,12 +794,16 @@
 
   function reDownload(url, title) {
     const link = document.createElement('a');
-    link.download = `${title}.png`;
+    link.download = `${title}`;
     link.href = url;
     link.click();
   }
 
-  window.onload = function() { createDefaultSetup(); };
+  window.onload = function() { 
+    createDefaultSetup();
+    updateFileNameDefault();
+    initDragAndDrop();
+  };
 </script>
 
 </body>
